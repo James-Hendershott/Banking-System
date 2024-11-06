@@ -5,7 +5,11 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
 var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+// Adding routes
+var loginRouter = require('./routes/login');
+var accountRouter = require('./routes/account');
+var transferRouter = require('./routes/transfer');
+var transactionRouter = require('./routes/transaction');
 
 var app = express();
 
@@ -22,7 +26,11 @@ app.use(express.static(path.join(__dirname, 'node_modules/bootsrtap/dist/')));
 app.use(express.static(path.join(__dirname, 'node_modules/bootsrtap-icons/dist/')));
 
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
+// Adding uses for routes
+app.use('/login', loginRouter);
+app.use('/account', accountRouter);
+app.use('/transfer', transferRouter);
+app.use('/transaction', transactionRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
