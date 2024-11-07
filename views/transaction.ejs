@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Transaction History</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/bootstrap-icons.css" />
+  </head>
+  <body>
+    <div class="container mt-5">
+      <h2 class="text-center text-primary">Transaction History</h2>
+      <table class="table table-striped mt-4">
+        <thead>
+          <tr>
+            <th><i class="bi bi-calendar-date-fill"></i> Date</th>
+            <th><i class="bi bi-currency-dollar"></i> Amount</th>
+            <th><i class="bi bi-card-text"></i> Memo</th>
+            <th><i class="bi bi-wallet2"></i> Account Type</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% transactions.forEach(transaction => { %>
+          <tr>
+            <td><%= transaction.date %></td>
+            <td>$<%= transaction.amount %></td>
+            <td><%= transaction.memo %></td>
+            <td><%= transaction.accountType %></td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      <div class="text-center mt-3">
+        <a href="/" class="btn btn-primary">
+          <i class="bi bi-house-fill"></i> Home
+        </a>
+      </div>
+    </div>
+  </body>
+</html>

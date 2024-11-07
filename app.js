@@ -22,8 +22,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static(path.join(__dirname, 'node_modules/bootsrtap/dist/')));
-app.use(express.static(path.join(__dirname, 'node_modules/bootsrtap-icons/dist/')));
+app.use(express.static(path.join(__dirname, 'node_modules/bootstrap/dist/')));
+app.use(express.static(path.join(__dirname, 'node_modules/bootstrap-icons/font')));
+
 
 app.use('/', indexRouter);
 // Adding uses for routes
