@@ -40,13 +40,20 @@ router.get('/account/savings', function(req, res) {
 router.post('/manage-customer', function(req, res) {
   const customerId = req.body.customerId;
 
-  const customerData = {
-    customerId,
-    checkingBalance: 1500.00,
-    savingsBalance: 2500.00,
-    recentTransactions: getTransactionData("Overview") // Summary of customer transactions
-  };
-  res.render('employeeCustomerView', { customerData });
+  // Find the customer in the mock database
+    const customer = mockCustomers.find(c => c.id === customerId);
+
+    if (customer) {
+        const customerData = {
+            customerId,
+            checkingBalance: customer.checkingBalance,
+            savingsBalance: customer.savingsBalance,
+            recentTransactions: getTransactionData("Overview") // Summary of customer transactions
+        };
+        res.render('employeeCustomerView', { customerData });
+    } else {
+        res.render('employeeAccount', { error: 'Customer not found', employeeData: {} }); // Display error
+    }
 });
 
 module.exports = router;

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Customer Account Overview</title>
+    <title>Customer Account</title>
     <link rel="stylesheet" href="/css/bootstrap.min.css" />
     <link rel="stylesheet" href="/bootstrap-icons.css" />
   </head>
@@ -21,9 +21,9 @@
       </div>
     </nav>
 
-    <!-- Customer Account Overview for Employee -->
+    <!-- Customer Account Details -->
     <div class="container mt-5">
-      <h2 class="text-center text-primary">Customer Account Overview</h2>
+      <h2 class="text-center text-primary">Customer Account Details</h2>
       <div class="card mt-4">
         <div class="card-body">
           <h5>Customer ID: <%= customerData.customerId %></h5>
@@ -31,19 +31,23 @@
             Checking Account Balance: $<%= customerData.checkingBalance %>
           </h5>
           <h5>Savings Account Balance: $<%= customerData.savingsBalance %></h5>
+          <h4 class="mt-5">Transaction History</h4>
+          <ul class="list-group">
+            <% customerData.recentTransactions.forEach(transaction => { %>
+            <li class="list-group-item">
+              <%= transaction.date %> - <%= transaction.type %> - $<%=
+              transaction.amount %>
+            </li>
+            <% }) %>
+          </ul>
         </div>
       </div>
+      <!-- Back to My Accounts Button -->
+      <div class="text-center mt-4">
+        <a href="/employee/account" class="btn btn-secondary">
+          <i class="bi bi-arrow-left"></i> Back to My Accounts
+        </a>
+      </div>
     </div>
-
-    <!-- Transaction History Overview -->
-    <h4 class="mt-5">Customer Transaction History</h4>
-    <ul class="list-group">
-      <% customerData.recentTransactions.forEach(transaction => { %>
-      <li class="list-group-item">
-        <%= transaction.date %> - <%= transaction.type %> - $<%=
-        transaction.amount %>
-      </li>
-      <% }) %>
-    </ul>
   </body>
 </html>
