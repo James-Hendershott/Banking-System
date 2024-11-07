@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Registration Successful</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/bootstrap-icons.css" />
+    <script>
+      // automatic redirect after 15 seconds
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 15000);
+    </script>
+  </head>
+  <body>
+    <div class="container mt-5">
+      <h2 class="text-center text-success">Registration Successful!</h2>
+      <p class="text-center">
+        Thank you, <%= firstName %>! Your unique ID (username) is:
+      </p>
+      <h3 class="text-center text-primary"><strong><%= uniqueID %></strong></h3>
+      <p class="text-center mt-4">
+        Use this ID to log in. You may want to save it somewhere safe.
+      </p>
+      <div class="text-center mt-4">
+        <a href="/login" class="btn btn-primary">Go to Login</a>
+      </div>
+    </div>
+  </body>
+</html>

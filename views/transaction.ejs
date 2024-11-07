@@ -1,50 +1,43 @@
 <!DOCTYPE html>
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-  <a class="navbar-brand" href="/">Banking System</a>
-  <div class="collapse navbar-collapse">
-    <ul class="navbar-nav ml-auto">
-      <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-      <li class="nav-item"><a class="nav-link" href="/profile">Profile</a></li>
-      <li class="nav-item"><a class="nav-link" href="/help">Help</a></li>
-      <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
-    </ul>
-  </div>
-</nav>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Transaction History</title>
-    <link rel="stylesheet" href="css/bootstrap.min.css" />
+    <title><%= accountType %> Account Transactions</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css" />
     <link rel="stylesheet" href="/bootstrap-icons.css" />
   </head>
   <body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <a class="navbar-brand" href="/">Banking System</a>
+      <div class="collapse navbar-collapse">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+          <li class="nav-item">
+            <a class="nav-link" href="/logout">Logout</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Account Transactions -->
     <div class="container mt-5">
-      <h2 class="text-center text-primary">Transaction History</h2>
-      <table class="table table-striped mt-4">
-        <thead>
-          <tr>
-            <th><i class="bi bi-calendar-date-fill"></i> Date</th>
-            <th><i class="bi bi-currency-dollar"></i> Amount</th>
-            <th><i class="bi bi-card-text"></i> Memo</th>
-            <th><i class="bi bi-wallet2"></i> Account Type</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% transactions.forEach(transaction => { %>
-          <tr>
-            <td><%= transaction.date %></td>
-            <td>$<%= transaction.amount %></td>
-            <td><%= transaction.memo %></td>
-            <td><%= transaction.accountType %></td>
-          </tr>
-          <% }) %>
-        </tbody>
-      </table>
-      <div class="text-center mt-3">
-        <a href="/" class="btn btn-primary">
-          <i class="bi bi-house-fill"></i> Home
+      <h2 class="text-center text-primary">
+        <%= accountType %> Account Transactions
+      </h2>
+      <ul class="list-group mt-4">
+        <% transactionHistory.forEach(transaction => { %>
+        <li class="list-group-item">
+          <%= transaction.date %> - <%= transaction.type %> - $<%=
+          transaction.amount %> - <%= transaction.memo || "N/A" %>
+        </li>
+        <% }) %>
+      </ul>
+      <!-- Back to My Accounts Button -->
+      <div class="text-center mt-4">
+        <a href="/customer/account" class="btn btn-secondary">
+          <i class="bi bi-arrow-left"></i> Back to My Accounts
         </a>
       </div>
     </div>

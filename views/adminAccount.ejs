@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Account Management</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/bootstrap-icons.css" />
+  </head>
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <a class="navbar-brand" href="/">Banking System</a>
+      <div class="collapse navbar-collapse">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+          <li class="nav-item">
+            <a class="nav-link" href="/logout">Logout</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Search and Manage Accounts Section -->
+    <div class="container mt-5">
+      <h2 class="text-center text-primary">Admin Account Management</h2>
+
+      <!-- Search User Form -->
+      <form action="/admin/account-search" method="POST" class="mt-4">
+        <div class="input-group mb-3">
+          <input
+            type="text"
+            name="userId"
+            class="form-control"
+            placeholder="Enter User ID"
+            required
+          />
+          <button class="btn btn-primary" type="submit">
+            <i class="bi bi-search"></i> Search User
+          </button>
+        </div>
+      </form>
+
+      <!-- Display User Account Info (conditional rendering) -->
+      <% if (userAccount) { %>
+      <div class="card mt-4">
+        <div class="card-body">
+          <h5 class="card-title">User ID: <%= userAccount.userId %></h5>
+          <p>Account Type: <%= userAccount.accountType %></p>
+          <p>Email: <%= userAccount.email %></p>
+
+          <!-- Change Password Section -->
+          <form action="/admin/change-password" method="POST" class="mt-3">
+            <input
+              type="hidden"
+              name="userId"
+              value="<%= userAccount.userId %>"
+            />
+            <div class="mb-3">
+              <label for="newPassword" class="form-label">New Password</label>
+              <input
+                type="password"
+                name="newPassword"
+                id="newPassword"
+                class="form-control"
+                required
+              />
+            </div>
+            <button type="submit" class="btn btn-warning w-100">
+              <i class="bi bi-key-fill"></i> Change Password
+            </button>
+          </form>
+        </div>
+      </div>
+      <% } %>
+    </div>
+  </body>
+</html>

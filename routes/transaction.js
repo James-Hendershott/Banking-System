@@ -4,13 +4,28 @@ var router = express.Router();
 /* GET transaction history page */
 router.get('/', function(req, res, next) {
     console.log("transaction.js: GET");
+    
+    // Sample transaction data
     const transactions = [
-        { date: '2024-11-01', amount: 200.00, memo: 'Grocery Shopping', accountType: 'Checking' },
-        { date: '2024-11-02', amount: 150.00, memo: 'Electric Bill', accountType: 'Checking' },
-        { date: '2024-11-03', amount: 500.00, memo: 'Rent Payment', accountType: 'Savings' },
-        { date: '2024-11-04', amount: 1000.00, memo: 'Paycheck', accountType: 'Savings' }
+        { date: '2024-11-01', amount: 200.00, memo: 'Grocery Shopping' },
+        { date: '2024-11-02', amount: 150.00, memo: 'Electric Bill' },
+        { date: '2024-11-03', amount: 500.00, memo: 'Rent Payment' },
+        { date: '2024-11-04', amount: 1000.00, memo: 'Paycheck' }
     ];
-    res.render('transaction', { transactions });
+    
+    // Determine back link based on user role
+    let backLink = '/customer/account'; // Default for customers
+    if (req.session.user) {
+        if (req.session.user.role === 'employee') {
+            backLink = '/employee/account'; // For employees
+        }
+    }
+
+    // Render transaction view with transactions and back link
+    res.render('transaction', { 
+        transactions, 
+        backLink 
+    });
 });
 
 /* POST transaction actions (if needed) */
@@ -21,4 +36,3 @@ router.post('/', function(req, res, next) {
 });
 
 module.exports = router;
-

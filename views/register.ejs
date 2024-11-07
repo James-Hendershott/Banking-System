@@ -2,61 +2,62 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login</title>
-    <link rel="stylesheet" href="css/bootstrap.min.css" />
+    <title>Register</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css" />
     <link rel="stylesheet" href="/bootstrap-icons.css" />
   </head>
   <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
       <a class="navbar-brand" href="/">Banking System</a>
-      <button
-        class="navbar-toggler"
-        type="button"
-        data-bs-toggle="collapse"
-        data-bs-target="#navbarNav"
-        aria-controls="navbarNav"
-        aria-expanded="false"
-        aria-label="Toggle navigation"
-      >
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
+      <div class="collapse navbar-collapse">
         <ul class="navbar-nav ms-auto">
           <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
           <li class="nav-item"><a class="nav-link" href="/help">Help</a></li>
-          <li class="nav-item">
-            <a class="nav-link" href="/logout">Logout</a>
-          </li>
         </ul>
       </div>
     </nav>
 
-    <!-- Login Form -->
+    <!-- Registration Form -->
     <div
       class="container-fluid vh-100 d-flex justify-content-center align-items-center"
     >
       <div class="col-md-6 col-lg-4 shadow p-4 bg-white rounded">
-        <h2 class="text-center text-primary mb-4">Login</h2>
-
-        <!-- Error message section -->
-        <% if (typeof error !== 'undefined') { %>
-        <div class="alert alert-danger text-center" role="alert">
-          <%= error %>
-        </div>
-        <% } %>
-
-        <form action="/login" method="POST">
+        <h2 class="text-center text-primary mb-4">Register</h2>
+        <form action="/register" method="POST">
           <div class="mb-3">
-            <label for="username" class="form-label">
-              <i class="bi bi-person-fill"></i> Username
+            <label for="firstName" class="form-label">
+              <i class="bi bi-person-fill"></i> First Name
             </label>
             <input
               type="text"
-              id="username"
-              name="username"
+              id="firstName"
+              name="firstName"
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label for="lastName" class="form-label">
+              <i class="bi bi-person-fill"></i> Last Name
+            </label>
+            <input
+              type="text"
+              id="lastName"
+              name="lastName"
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label for="email" class="form-label">
+              <i class="bi bi-envelope-fill"></i> Email
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
               class="form-control"
               required
             />
@@ -74,13 +75,9 @@
             />
           </div>
           <button type="submit" class="btn btn-primary w-100">
-            <i class="bi bi-box-arrow-in-right"></i> Log In
+            <i class="bi bi-box-arrow-in-right"></i> Register
           </button>
         </form>
-        <!-- Forgot Password Link -->
-        <div class="text-center mt-3">
-          <a href="/forgot-password" class="text-primary">Forgot Password?</a>
-        </div>
       </div>
     </div>
   </body>
