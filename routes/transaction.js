@@ -21,10 +21,13 @@ router.get('/', function(req, res, next) {
         }
     }
 
+    const accountType = req.query.accountType || 'Account'; // Default to 'Account' if not set
+
     // Render transaction view with transactions and back link
     res.render('transaction', { 
         transactions, 
-        backLink 
+        backLink,
+        accountType // Pass account type to the view
     });
 });
 
