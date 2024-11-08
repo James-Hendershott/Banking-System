@@ -35,8 +35,8 @@ router.get('/account/savings', function(req, res) {
 // POST transfer funds between accounts
 router.post('/transfer', function(req, res) {
   const { fromAccount, toAccount, amount, memo } = req.body;
-  console.log(`Transfer ${amount} from ${fromAccount} to ${toAccount} with memo: ${memo}`);
-  res.redirect(`/customer/account/${fromAccount}`); // Redirect to the specific account's transaction view
+  console.log('Transfer ${amount} from ${fromAccount} to ${toAccount} with memo: ${memo}');
+  res.redirect('/customer/account');
 });
 
-module.exports = router;
+module.exports = router; 
