@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 
-// Mock function to get account data (replace with actual database call as needed)
+// Mock function to get account data will need to replace with actual database call as needed
 function getAccountData(accountType) {
   const accountData = {
     checking: {

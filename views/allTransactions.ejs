@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>All Transactions</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/bootstrap-icons.css" />
+  </head>
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <a class="navbar-brand" href="/">Banking System</a>
+      <div class="collapse navbar-collapse">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+          <li class="nav-item">
+            <a class="nav-link" href="/logout">Logout</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- All Transactions -->
+    <div class="container mt-5">
+      <h2 class="text-center">All Transactions</h2>
+      <ul class="list-group mt-4">
+        <% transactionHistory.forEach(transaction => { %>
+        <li class="list-group-item">
+          <%= transaction.date %> - <%= transaction.type %> - $<%=
+          transaction.amount %> - <%= transaction.memo || "N/A" %>
+        </li>
+        <% }) %>
+      </ul>
+      <!-- Back to My Accounts Button -->
+      <div class="text-center mt-4">
+        <a href="<%= backLink %>" class="btn btn-secondary">
+          <i class="bi bi-arrow-left"></i> Back to My Accounts
+        </a>
+      </div>
+    </div>
+  </body>
+</html>

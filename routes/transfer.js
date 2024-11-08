@@ -19,8 +19,8 @@ router.post('/', function(req, res, next) {
     if (fromAccount && toAccount && amount > 0 && fromAccount !== toAccount) {
         console.log(`Transfer of $${amount} from ${fromAccount} to ${toAccount} completed.`);
         // Set account type based on the fromAccount
-        const accountType = fromAccount.charAt(0).toUpperCase() + fromAccount.slice(1); // Capitalize
-        res.redirect(`/transaction?accountType=${accountType}`); // Redirect with query parameter
+        //const accountType = fromAccount.charAt(0).toUpperCase() + fromAccount.slice(1); // Capitalize
+        res.redirect(`/transaction`) // Redirect with query parameter
     } else {
         console.log("Transfer failed: Invalid input");
         res.render('transfer', { error: 'Invalid transfer details', backLink: `/${req.session.user.role}/account` }); // Reloads the page with an error message
