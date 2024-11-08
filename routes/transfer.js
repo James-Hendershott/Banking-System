@@ -10,7 +10,6 @@ router.get('/', function(req, res, next) {
 
     res.render('transfer', { backLink }); // Pass backLink to the view
 });
-
 /* POST transfer funds action */
 router.post('/', function(req, res, next) {
     console.log("transfer.js: POST");
@@ -19,7 +18,9 @@ router.post('/', function(req, res, next) {
     // Placeholder logic for transferring funds
     if (fromAccount && toAccount && amount > 0 && fromAccount !== toAccount) {
         console.log(`Transfer of $${amount} from ${fromAccount} to ${toAccount} completed.`);
-        res.redirect('/transaction'); // Redirect to the transaction history page after successful transfer
+        // Set account type based on the fromAccount
+        const accountType = fromAccount.charAt(0).toUpperCase() + fromAccount.slice(1); // Capitalize
+        res.redirect(`/transaction?accountType=${accountType}`); // Redirect with query parameter
     } else {
         console.log("Transfer failed: Invalid input");
         res.render('transfer', { error: 'Invalid transfer details', backLink: `/${req.session.user.role}/account` }); // Reloads the page with an error message
