@@ -21,15 +21,21 @@ var customerRouter = require('./routes/customer');
 
 // Import role-checking middleware
 const roleCheck = require('./middleware/roleCheck');
+// Import the database module
+var db = require('./lib/database'); 
 
 var app = express();
 
-// Set up session middleware BEFORE routes, causing issues!
+// Set up session middleware
 app.use(session({
-    secret: 'yourSecretKey',
+    secret: process.env.SESSION_SECRET || 'yourSecretKey', // Secure for production
     resave: false,
-    saveUninitialized: true
+    saveUninitialized: true,
+    cookie: { secure: process.env.NODE_ENV === 'production' } // Secure cookies in production
 }));
+
+// Initialize the database
+db.initializeDatabase();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
