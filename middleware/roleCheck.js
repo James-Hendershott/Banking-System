@@ -1,73 +1,58 @@
-const db = require('../lib/database'); // Import the database connection
+const db = require('../lib/database');
 
 module.exports = {
-  checkCustomer: async (req, res, next) => {
-    try {
-      if (req.session.user && req.session.user.user_id) {
-        // Query the database to get the user's role
-        const [result] = await db.promise().query(
-          'SELECT type FROM user_roles INNER JOIN users ON users.user_role_id = user_roles.id WHERE users.user_id = ?',
-          [req.session.user.user_id]
-        );
-
-        if (result.length > 0 && result[0].type === 'customer') {
-          next(); // User is a customer; proceed
-        } else {
-          res.redirect('/login'); // Redirect if not authorized
+    checkCustomer: (req, res, next) => {
+        if (!req.session.user) {
+            return res.redirect('/login');
         }
-      } else {
-        res.redirect('/login'); // Redirect if no session or user ID
-      }
-    } catch (err) {
-      console.error('Error checking customer role:', err);
-      res.redirect('/login'); // Redirect on error
-    }
-  },
-
-  checkEmployee: async (req, res, next) => {
-    try {
-      if (req.session.user && req.session.user.user_id) {
-        // Query the database to get the user's role
-        const [result] = await db.promise().query(
-          'SELECT type FROM user_roles INNER JOIN users ON users.user_role_id = user_roles.id WHERE users.user_id = ?',
-          [req.session.user.user_id]
+        const userId = req.session.user.user_id;
+        db.con.query(
+            `SELECT r.type FROM users u 
+             JOIN user_roles r ON u.user_role_id = r.id 
+             WHERE u.user_id = ?`,
+            [userId],
+            (err, results) => {
+                if (err || results.length === 0 || results[0].type !== 'customer') {
+                    return res.redirect('/login');
+                }
+                next();
+            }
         );
-
-        if (result.length > 0 && result[0].type === 'employee') {
-          next(); // User is an employee; proceed
-        } else {
-          res.redirect('/login'); // Redirect if not authorized
+    },
+    checkEmployee: (req, res, next) => {
+        if (!req.session.user) {
+            return res.redirect('/login');
         }
-      } else {
-        res.redirect('/login'); // Redirect if no session or user ID
-      }
-    } catch (err) {
-      console.error('Error checking employee role:', err);
-      res.redirect('/login'); // Redirect on error
-    }
-  },
-
-  checkAdmin: async (req, res, next) => {
-    try {
-      if (req.session.user && req.session.user.user_id) {
-        // Query the database to get the user's role
-        const [result] = await db.promise().query(
-          'SELECT type FROM user_roles INNER JOIN users ON users.user_role_id = user_roles.id WHERE users.user_id = ?',
-          [req.session.user.user_id]
+        const userId = req.session.user.user_id;
+        db.con.query(
+            `SELECT r.type FROM users u 
+             JOIN user_roles r ON u.user_role_id = r.id 
+             WHERE u.user_id = ?`,
+            [userId],
+            (err, results) => {
+                if (err || results.length === 0 || results[0].type !== 'employee') {
+                    return res.redirect('/login');
+                }
+                next();
+            }
         );
-
-        if (result.length > 0 && result[0].type === 'admin') {
-          next(); // User is an admin; proceed
-        } else {
-          res.redirect('/login'); // Redirect if not authorized
+    },
+    checkAdmin: (req, res, next) => {
+        if (!req.session.user) {
+            return res.redirect('/login');
         }
-      } else {
-        res.redirect('/login'); // Redirect if no session or user ID
-      }
-    } catch (err) {
-      console.error('Error checking admin role:', err);
-      res.redirect('/login'); // Redirect on error
-    }
-  }
+        const userId = req.session.user.user_id;
+        db.con.query(
+            `SELECT r.type FROM users u 
+             JOIN user_roles r ON u.user_role_id = r.id 
+             WHERE u.user_id = ?`,
+            [userId],
+            (err, results) => {
+                if (err || results.length === 0 || results[0].type !== 'admin') {
+                    return res.redirect('/login');
+                }
+                next();
+            }
+        );
+    },
 };
-
