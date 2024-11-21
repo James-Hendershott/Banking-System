@@ -20,7 +20,7 @@ var employeeRouter = require('./routes/employee');
 var customerRouter = require('./routes/customer');
 
 // Import role-checking middleware
-const roleCheck = require('./middleware/roleCheck');
+var roleCheck = require('./middleware/roleCheck');
 // Import the database module
 var db = require('./lib/database'); 
 
@@ -57,6 +57,7 @@ app.use('/help', helpRouter);
 app.use('/forgot-password', forgotPasswordRouter);
 
 // Role-protected Routes
+// Requires users to be authenticated and have specific roles
 app.use('/account', roleCheck.checkCustomer, accountRouter);
 app.use('/transaction', roleCheck.checkCustomer, transactionRouter);
 app.use('/transfer', roleCheck.checkCustomer, transferRouter);
