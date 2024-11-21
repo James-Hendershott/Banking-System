@@ -4,6 +4,7 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var session = require('express-session');
+var MySQLStore = require('express-mysql-session')(session); // Import MySQL session store
 
 // Adding routes
 var indexRouter = require('./routes/index');
@@ -22,16 +23,27 @@ var customerRouter = require('./routes/customer');
 // Import role-checking middleware
 var roleCheck = require('./middleware/roleCheck');
 // Import the database module
-var db = require('./lib/database'); 
+var db = require('./lib/database');
+
+// Import the session pool for MySQL
+var sessionPool = require('./lib/sessionPool.js');
 
 var app = express();
 
+// Set up session store
+var sessionStore = new MySQLStore({}, sessionPool);
+
 // Set up session middleware
 app.use(session({
+    key: 'user_session_cookie',
     secret: process.env.SESSION_SECRET || 'yourSecretKey', // Secure for production
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: process.env.NODE_ENV === 'production' } // Secure cookies in production
+    store: sessionStore,
+    resave: false, // Do not save session if not modified
+    saveUninitialized: false, // Do not create session until something is stored
+    cookie: {
+        secure: process.env.NODE_ENV === 'production', // Set to true in production with HTTPS
+        maxAge: 1000 * 60 * 60 * 24 // Set session cookie expiration to 1 day (example)
+    }
 }));
 
 // Initialize the database

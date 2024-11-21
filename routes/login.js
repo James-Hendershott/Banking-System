@@ -1,61 +1,63 @@
 var express = require('express');
 var router = express.Router();
-const db = require('../lib/database'); // import the database module
-const crypto = require('crypto'); // Import the crypto module
+const db = require('../lib/database'); // Import database module
 
-/* GET login page */
-router.get('/', function(req, res, next) {
-  res.render('login');
+// GET login page
+router.get('/', function (req, res) {
+    res.render('login');
 });
 
-/* POST login credentials */
-router.post('/', function(req, res, next) {
-  const { username, password } = req.body;
-// Check if username exists in the database
+// POST login credentials
+router.post('/', function (req, res) {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+        return res.render('login', { error: 'All fields are required.' });
+    }
+
+    // Fetch user details using the stored procedure
     db.con.query(
-        `SELECT u.user_id, u.hashed_password, u.salt, r.type AS role 
-         FROM users u 
-         JOIN user_roles r ON u.user_role_id = r.id 
-         WHERE u.username = ?`,
+        `CALL validate_login(?)`,
         [username],
         (err, results) => {
-            if (err) {
-                console.error(err);
-                return res.render('login', { error: 'An error occurred. Please try again.' });
-            }
-
-            if (results.length === 0) {
-                // Username not found
+            if (err || results[0].length === 0) {
                 return res.render('login', { error: 'Invalid username or password.' });
             }
 
-            const user = results[0];
+            const user = results[0][0]; // Extract the user data from the stored procedure
+            const storedPassword = user.hashed_password;
 
-            // Hash the provided password with the stored salt
-            const hash = crypto
-                .createHash('sha256')
-                .update(password + user.salt)
-                .digest('hex');
+            // Compare provided password with stored password
+            if (password !== storedPassword) {
+                return res.render('login', { error: 'Invalid username or password.' });
+            }
 
-            if (hash === user.hashed_password) {
-                // Password matches
-                req.session.user = {
-                    user_id: user.user_id,
-                    role: user.role,
-                };
+            // Store user session info
+            req.session.user = {
+                user_id: user.user_id,
+                username: user.username,
+                role: user.role,
+            };
 
-                // Redirect based on the user's role
-                if (user.role === 'admin') {
-                    return res.redirect('/admin/account');
-                } else if (user.role === 'employee') {
-                    return res.redirect('/employee/account');
-                } else if (user.role === 'customer') {
-                    return res.redirect('/customer/account');
+            // Save the session and redirect based on role
+            req.session.save((err) => {
+                if (err) {
+                    console.error("Error saving session:", err);
+                    return res.render('login', { error: 'An error occurred. Please try again later.' });
                 }
-            } else {
-                // Password does not match
-                return res.render('login', { error: 'Invalid username or password.' });
-            }
+
+                // Redirect based on role
+                console.log("Login successful. Redirecting user:", user.role); // Debugging log
+                if (user.role === 'admin') {
+                    res.redirect('/admin/account');
+                } else if (user.role === 'employee') {
+                    res.redirect('/employee/account');
+                } else if (user.role === 'customer') {
+                    res.redirect('/customer/account');
+                } else {
+                    res.redirect('/login'); // Default case if role is unknown
+                }
+            });
         }
     );
 });
