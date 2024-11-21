@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+const db = require('../lib/database');
 
 // GET admin account management page
 router.get('/account', function(req, res) {
@@ -7,65 +8,102 @@ router.get('/account', function(req, res) {
   res.render('adminAccount', { userAccount: null });
 });
 
-// POST search for a user by ID
-router.post('/account-search', function(req, res) {
-  const userId = req.body.userId;
-
-  // Mock user account data
-  const userAccount = {
-    userId,
-    accountType: "Checking and Savings",
-    email: "user@example.com"
-  };
-
-  // Render with the userAccount data
-  res.render('adminAccount', { userAccount });
+// GET User Search page
+router.get('/account-search', function (req, res) {
+  res.render('adminAccount', { userAccount: null });
 });
 
-// Mock customer data for demonstration (replace with actual database calls)
-const mockCustomers = [
-    { id: 'cust1', checkingBalance: 0.00, savingsBalance: 0.00 },
-    { id: 'cust2', checkingBalance: 1000.00, savingsBalance: 1500.00 } // Example account with balance
-];
+// POST search for a user by Username
+router.post('/account-search', (req, res) => {
+  const username = req.body.username;
+
+  if (!username) {
+    return res.render('adminAccount', { error: 'Username is missing.' });
+  }
+
+  db.con.query(`CALL fetch_user_by_username(?)`, [username], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.render('adminAccount', { error: 'An error occurred. Please try again.' });
+    }
+
+    // Check if the user was found
+    if (results[0].length === 0) {
+      return res.render('adminAccount', { error: 'User not found.' });
+    }
+
+    // Extract user details from the SQL result
+    const userAccount = results[0][0];
+    res.render('adminAccount', { userAccount });
+  });
+});
+
+
 // POST promote a user to Admin
 router.post('/promote-user', function(req, res) {
-    const userId = req.body.userId;
-    const promote = req.body.promote ? true : false; // Check if the checkbox was checked
+  const username = req.body.username;
+  const promote = req.body.promote ? true : false; // Check if the checkbox was checked
 
-    // Find the customer data (this should be replaced with actual data retrieval logic)
-    const customer = mockCustomers.find(c => c.id === userId);
+  if (!username) {
+    return res.render('promotionConfirmation', {
+      error: 'Username is missing. Please try again.',
+      username: null
+    });
+  }
 
+  db.con.query(`CALL get_user_account_balances(?)`, [username], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.render('promotionConfirmation', {
+        error: 'An error occurred while retrieving user account balances.',
+        username
+      });
+    }
+
+    const customer = results[0][0];
     if (!customer) {
-        return res.status(404).send('User not found');
+      return res.render('promotionConfirmation', {
+        error: 'User not found.',
+        username
+      });
     }
 
     // Check account balances before promoting
     if (promote) {
-        if (customer.checkingBalance > 0 || customer.savingsBalance > 0) {
-            console.log(`User ${userId} cannot be promoted as they have funds in their accounts.`);
+      if (customer.checkingBalance > 0 || customer.savingsBalance > 0) {
+        console.log(`User ${username} cannot be promoted as they have funds in their accounts.`);
+        return res.render('promotionConfirmation', {
+          error: 'Promotion failed: Customer must have $0 in both accounts to be promoted to Admin.',
+          username
+        });
+      } else {
+        // Update the user's role in the database
+        db.con.query(`CALL change_user_type(?, 'admin')`, [username], (err, result) => {
+          if (err) {
+            console.error(err);
             return res.render('promotionConfirmation', {
-                error: 'Promotion failed: Customer must have $0 in both accounts to be promoted to Admin.',
-                userId
+              error: 'An error occurred while promoting the user.',
+              username
             });
-        } else {
-            // Add logic to promote the user in your database or data store here
-            console.log(`User ${userId} has been promoted to Admin.`);
-            // Redirect to a confirmation page
-            res.render('promotionConfirmation', { userId });
-        }
+          }
+
+          console.log(`User ${username} has been promoted to Admin.`);
+          res.render('promotionConfirmation', { error: null, username });
+        });
+      }
     } else {
-        console.log(`User ${userId} promotion canceled.`);
-        // Redirect back to the admin account management page
-        res.redirect('/admin/account');
+      console.log(`User ${username} promotion canceled.`);
+      res.redirect('/admin/account');
     }
+  });
 });
+
 // POST change user password
 router.post('/change-password', function(req, res) {
-  const { userId, newPassword } = req.body;
-  console.log(`Password for user ${userId} changed to ${newPassword}`);
+  const { username, newPassword } = req.body;
+  console.log(`Password for user ${username} changed to ${newPassword}`);
   res.redirect('/admin/account'); // Redirect to the account page
 });
 
+
 module.exports = router;
-
-

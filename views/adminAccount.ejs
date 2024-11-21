@@ -6,6 +6,12 @@
     <title>Admin Account Management</title>
     <link rel="stylesheet" href="/css/bootstrap.min.css" />
     <link rel="stylesheet" href="/bootstrap-icons.css" />
+    <script>
+      // Redirect after 10 seconds
+      setTimeout(function () {
+        window.location.href = "/admin/account"; // Redirect to admin account page
+      }, 10000);
+    </script>
   </head>
   <body>
     <!-- Navbar -->
@@ -25,14 +31,22 @@
     <div class="container mt-5">
       <h2 class="text-center text-primary">Admin Account Management</h2>
 
+      <!-- Display error message if present -->
+      <% if (typeof error !== 'undefined') { %>
+      <div class="alert alert-danger text-center" role="alert">
+        <%= error %>
+      </div>
+      <% } %>
+
       <!-- Search User Form -->
+
       <form action="/admin/account-search" method="POST" class="mt-4">
         <div class="input-group mb-3">
           <input
             type="text"
-            name="userId"
+            name="username"
             class="form-control"
-            placeholder="Enter User ID"
+            placeholder="Enter Username"
             required
           />
           <button class="btn btn-primary" type="submit">
@@ -40,21 +54,23 @@
           </button>
         </div>
       </form>
-
-      <!-- Display User Account Info (Mock information until able to link to database) -->
+      <!-- Display User Account Info (Only if userAccount exists) -->
       <% if (userAccount) { %>
       <div class="card mt-4">
         <div class="card-body">
-          <h5 class="card-title">User ID: <%= userAccount.userId %></h5>
+          <h5 class="card-title">User: <%= userAccount.username %></h5>
+          <p>First Name: <%= userAccount.first_name %></p>
+          <p>Last Name: <%= userAccount.last_name %></p>
           <p>Account Type: <%= userAccount.accountType %></p>
           <p>Email: <%= userAccount.email %></p>
+          <p>User ID: <%= userAccount.user_id %></p>
 
           <!-- Promotion Section -->
           <form action="/admin/promote-user" method="POST" class="mt-3">
             <input
               type="hidden"
-              name="userId"
-              value="<%= userAccount.userId %>"
+              name="username"
+              value="<%= userAccount.username %>"
             />
             <div class="form-check">
               <input
@@ -71,12 +87,13 @@
               <i class="bi bi-person-plus"></i> Promote User
             </button>
           </form>
+
           <!-- Change Password Section -->
           <form action="/admin/change-password" method="POST" class="mt-3">
             <input
               type="hidden"
-              name="userId"
-              value="<%= userAccount.userId %>"
+              name="username"
+              value="<%= userAccount.username %>"
             />
             <div class="mb-3">
               <label for="newPassword" class="form-label">New Password</label>
@@ -95,6 +112,16 @@
         </div>
       </div>
       <% } %>
+
+      <!-- Buttons to navigate back -->
+      <div class="text-center mt-4">
+        <a href="/admin/account-search" class="btn btn-secondary me-2">
+          <i class="bi bi-search"></i> Back to User Search
+        </a>
+        <a href="/admin/account" class="btn btn-secondary">
+          <i class="bi bi-arrow-left"></i> Back to My Accounts
+        </a>
+      </div>
     </div>
   </body>
 </html>

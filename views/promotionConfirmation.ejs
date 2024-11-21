@@ -18,20 +18,21 @@
       <h2
         class="text-center <% if (typeof error !== 'undefined') { %>text-danger<% } else { %>text-success<% } %>"
       >
-        <% if (typeof error !== 'undefined') { %> Promotion Failed! <% } else {
-        %> User Promotion Successful! <% } %>
-      </h2>
       <% if (typeof error !== 'undefined') { %>
-      <p class="text-center"><strong><%= error %></strong></p>
-      <% } else { %>
-      <p class="text-center">
-        User <strong><%= userId %></strong> has been successfully promoted to
-        Admin.
-      </p>
-      <% } %>
+        <h2 class="text-center text-danger">Promotion Failed!</h2>
+        <p class="text-center"><strong><%= error %></strong></p>
+        <% } else if (typeof success !== 'undefined' && success) { %>
+        <h2 class="text-center text-success">User Promotion Successful!</h2>
+        <p class="text-center">
+            User <strong><%= username %></strong> has been successfully promoted to Admin.
+        </p>
+        <% } %>
       <div class="text-center mt-4">
         <a href="/admin/account" class="btn btn-secondary">
           <i class="bi bi-arrow-left"></i> Back to My Accounts
+        </a>
+        <a href="/admin/account-search" class="btn btn-secondary">
+          <i class="bi bi-search"></i> Back to User Search
         </a>
       </div>
     </div>
