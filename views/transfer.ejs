@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -7,24 +8,12 @@
     <title>Transfer Funds</title>
     <link rel="stylesheet" href="css/bootstrap.min.css" />
     <link rel="stylesheet" href="/bootstrap-icons.css" />
-    <script>
-      // JavaScript function to validate the amount input
-      function validateForm(event) {
-        const amountInput = document.getElementById('amount');
-        const amountValue = parseFloat(amountInput.value);
-
-        if (isNaN(amountValue) || amountValue <= 0) {
-          event.preventDefault();
-          alert('Please enter a valid amount greater than 0.');
-        }
-      }
-    </script>
   </head>
   <body>
-    <!-- Navbar -->
+    <!-- Include Navbar -->
     <% include partials/navbar %>
 
-    <!-- Transfer Form -->
+    <!-- Transfer Funds Form -->
     <div class="container mt-5">
       <h2 class="text-center">Transfer Funds</h2>
 
@@ -42,7 +31,8 @@
       </div>
       <% } %>
 
-      <form action="/transfer" method="POST" onsubmit="validateForm(event)">
+      <form action="/transfer" method="POST">
+        <!-- From Account Dropdown -->
         <div class="form-group mb-3">
           <label for="fromAccount" class="form-label">From Account</label>
           <select id="fromAccount" name="fromAccount" class="form-control" required>
@@ -51,6 +41,8 @@
             <% }); %>
           </select>
         </div>
+
+        <!-- To Account Dropdown -->
         <div class="form-group mb-3">
           <label for="toAccount" class="form-label">To Account</label>
           <select id="toAccount" name="toAccount" class="form-control" required>
@@ -59,6 +51,8 @@
             <% }); %>
           </select>
         </div>
+
+        <!-- Amount Input -->
         <div class="form-group mb-3">
           <label for="amount" class="form-label">Amount</label>
           <input
@@ -70,16 +64,20 @@
             required
           />
         </div>
+
+        <!-- Memo Input -->
         <div class="form-group mb-3">
           <label for="memo" class="form-label">Memo (Optional)</label>
           <input type="text" id="memo" name="memo" class="form-control" />
         </div>
+
+        <!-- Submit Button -->
         <button type="submit" class="btn btn-primary w-100">
           <i class="bi bi-arrow-right-circle"></i> Transfer
         </button>
       </form>
 
-      <!-- Back to My Accounts Button -->
+      <!-- Back Button -->
       <div class="text-center mt-4">
         <a href="<%= backLink %>" class="btn btn-secondary">
           <i class="bi bi-arrow-left"></i> Back to My Accounts

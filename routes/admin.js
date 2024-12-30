@@ -1,109 +1,63 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
+const { fetchUserById, fetchUserAccounts } = require('../lib/dataUtils');
+const roleCheck = require('../middleware/roleCheck');
 const db = require('../lib/database');
 
-// GET admin account management page
-router.get('/account', function(req, res) {
-  // Render adminAccount with userAccount initialized as null for initial load
-  res.render('adminAccount', { userAccount: null });
+// GET Admin Account Management Page
+router.get('/account', roleCheck.checkAdmin, (req, res) => {
+    res.render('adminAccount', { userAccount: null });
 });
 
-// GET User Search page
-router.get('/account-search', function (req, res) {
-  res.render('adminAccount', { userAccount: null });
+// POST Search for User by Username
+router.post('/account-search', roleCheck.checkAdmin, async (req, res) => {
+    try {
+        const username = req.body.username;
+        if (!username) throw new Error('Username is required.');
+
+        const user = await fetchUserById(username);
+        if (!user) throw new Error('User not found.');
+
+        res.render('adminAccount', { userAccount: user });
+    } catch (error) {
+        res.render('adminAccount', { error: error.message, userAccount: null });
+    }
 });
 
-// POST search for a user by Username
-router.post('/account-search', (req, res) => {
-  const username = req.body.username;
+// POST Promote User to Admin
+router.post('/promote-user', roleCheck.checkAdmin, async (req, res) => {
+    try {
+        const username = req.body.username;
+        if (!username) throw new Error('Username is required.');
 
-  if (!username) {
-    return res.render('adminAccount', { error: 'Username is missing.' });
-  }
+        const user = await fetchUserById(username);
+        if (!user) throw new Error('User not found.');
 
-  db.con.query(`CALL fetch_user_by_username(?)`, [username], (err, results) => {
-    if (err) {
-      console.error(err);
-      return res.render('adminAccount', { error: 'An error occurred. Please try again.' });
+        const accounts = await fetchUserAccounts(user.user_id);
+        const hasFunds = accounts.some((account) => account.balance > 0);
+
+        if (hasFunds) {
+            throw new Error('Cannot promote user with funds in their accounts.');
+        }
+
+        await db.con.query('CALL change_user_type(?, "admin")', [username]);
+        res.render('promotionConfirmation', { success: true, username });
+    } catch (error) {
+        res.render('promotionConfirmation', { error: error.message });
     }
-
-    // Check if the user was found
-    if (results[0].length === 0) {
-      return res.render('adminAccount', { error: 'User not found.' });
-    }
-
-    // Extract user details from the SQL result
-    const userAccount = results[0][0];
-    res.render('adminAccount', { userAccount });
-  });
 });
 
+// POST Change User Password
+router.post('/change-password', roleCheck.checkAdmin, async (req, res) => {
+    try {
+        const { username, newPassword } = req.body;
+        if (!username || !newPassword) throw new Error('Username and password are required.');
 
-// POST promote a user to Admin
-router.post('/promote-user', function(req, res) {
-  const username = req.body.username;
-  const promote = req.body.promote ? true : false; // Check if the checkbox was checked
-
-  if (!username) {
-    return res.render('promotionConfirmation', {
-      error: 'Username is missing. Please try again.',
-      username: null
-    });
-  }
-
-  db.con.query(`CALL get_user_account_balances(?)`, [username], (err, results) => {
-    if (err) {
-      console.error(err);
-      return res.render('promotionConfirmation', {
-        error: 'An error occurred while retrieving user account balances.',
-        username
-      });
+        await db.con.query('CALL change_user_password(?, ?)', [username, newPassword]);
+        res.redirect('/admin/account');
+    } catch (error) {
+        res.render('adminAccount', { error: error.message });
     }
-
-    const customer = results[0][0];
-    if (!customer) {
-      return res.render('promotionConfirmation', {
-        error: 'User not found.',
-        username
-      });
-    }
-
-    // Check account balances before promoting
-    if (promote) {
-      if (customer.checkingBalance > 0 || customer.savingsBalance > 0) {
-        console.log(`User ${username} cannot be promoted as they have funds in their accounts.`);
-        return res.render('promotionConfirmation', {
-          error: 'Promotion failed: Customer must have $0 in both accounts to be promoted to Admin.',
-          username
-        });
-      } else {
-        // Update the user's role in the database
-        db.con.query(`CALL change_user_type(?, 'admin')`, [username], (err, result) => {
-          if (err) {
-            console.error(err);
-            return res.render('promotionConfirmation', {
-              error: 'An error occurred while promoting the user.',
-              username
-            });
-          }
-
-          console.log(`User ${username} has been promoted to Admin.`);
-          res.render('promotionConfirmation', { error: null, username });
-        });
-      }
-    } else {
-      console.log(`User ${username} promotion canceled.`);
-      res.redirect('/admin/account');
-    }
-  });
 });
-
-// POST change user password
-router.post('/change-password', function(req, res) {
-  const { username, newPassword } = req.body;
-  console.log(`Password for user ${username} changed to ${newPassword}`);
-  res.redirect('/admin/account'); // Redirect to the account page
-});
-
 
 module.exports = router;
