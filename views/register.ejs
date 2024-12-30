@@ -17,6 +17,12 @@
     >
       <div class="col-md-6 col-lg-4 shadow p-4 bg-white rounded">
         <h2 class="text-center text-primary mb-4">Register</h2>
+          <!-- Error message section -->
+          <% if (typeof error !== 'undefined') { %>
+          <div class="alert alert-danger text-center" role="alert">
+            <%= error %>
+          </div>
+          <% } %>
         <form action="/register" method="POST">
           <div class="mb-3">
             <label for="firstName" class="form-label">
@@ -52,6 +58,7 @@
               name="email"
               class="form-control"
               required
+              pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
             />
           </div>
           <div class="mb-3">

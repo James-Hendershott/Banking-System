@@ -1,10 +1,16 @@
 var express = require('express');
 var router = express.Router();
 const db = require('../lib/database');
+const crypto = require('crypto'); // For salt and hashing
 
 // Function to generate a random username
 function generateUsername() {
     return 'user' + Math.floor(Math.random() * 900000 + 100000); // Generates a 6-digit random number
+}
+
+// Function to generate a random salt
+function generateSalt() {
+    return crypto.randomBytes(16).toString('hex'); // Generate a 16-byte salt
 }
 
 // GET registration page
@@ -24,10 +30,17 @@ router.post('/', function (req, res) {
         // Generate a random username
         const uniqueID = generateUsername();
 
+        // Generate a random salt and hash the password
+        const salt = generateSalt();
+        const hashedPassword = crypto
+            .createHash('sha256')
+            .update(salt + password) // Concatenate salt and password
+            .digest('hex');
+
         // Insert user into the database using a stored procedure
         db.con.query(
             `CALL register_user(?, ?, ?, ?, ?, @result)`,
-            [uniqueID, password, firstName, lastName, email],
+            [uniqueID, hashedPassword, salt, firstName, lastName, email],
             (err, results) => {
                 if (err) {
                     console.error(err);
