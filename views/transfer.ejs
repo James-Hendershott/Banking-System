@@ -7,6 +7,18 @@
     <title>Transfer Funds</title>
     <link rel="stylesheet" href="css/bootstrap.min.css" />
     <link rel="stylesheet" href="/bootstrap-icons.css" />
+    <script>
+      // JavaScript function to validate the amount input
+      function validateForm(event) {
+        const amountInput = document.getElementById('amount');
+        const amountValue = parseFloat(amountInput.value);
+
+        if (isNaN(amountValue) || amountValue <= 0) {
+          event.preventDefault();
+          alert('Please enter a valid amount greater than 0.');
+        }
+      }
+    </script>
   </head>
   <body>
     <!-- Navbar -->
@@ -30,7 +42,7 @@
       </div>
       <% } %>
 
-      <form action="/transfer" method="POST">
+      <form action="/transfer" method="POST" onsubmit="validateForm(event)">
         <div class="form-group mb-3">
           <label for="fromAccount" class="form-label">From Account</label>
           <select id="fromAccount" name="fromAccount" class="form-control" required>
