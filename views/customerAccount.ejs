@@ -9,18 +9,8 @@
   </head>
   <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-      <a class="navbar-brand" href="/">Banking System</a>
-      <div class="collapse navbar-collapse">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-          <li class="nav-item">
-            <a class="nav-link" href="/logout">Logout</a>
-          </li>
-        </ul>
-      </div>
-    </nav>
-
+    <% include partials/navbar %>   
+    
     <!-- Customer Account Details -->
     <div class="container mt-5">
   <h2 class="text-center text-primary">My Accounts</h2>
@@ -47,11 +37,11 @@
       <!-- Transaction History -->
       <h4 class="mt-5">Transaction History</h4>
       <ul class="list-group">
-         <% customerData.recentTransactions.forEach(transaction => { %>
-            <li class="list-group-item">
-               <%= transaction.date %> - <%= transaction.type %> - $<%= transaction.amount %>
-            </li>
-         <% }) %>
+        <% customerData.recentTransactions.forEach(transaction => { %>
+          <li class="list-group-item">
+              <%= transaction.date %> - <%= transaction.type %> - $<%= transaction.amount %>
+          </li>
+        <% }) %>
       </ul>
 
 

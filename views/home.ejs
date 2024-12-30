@@ -8,26 +8,24 @@
     <link rel="stylesheet" href="/bootstrap-icons.css" />
   </head>
   <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-      <a class="navbar-brand" href="/">Banking System</a>
-      <div class="collapse navbar-collapse">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
-          <li class="nav-item">
-            <a class="nav-link" href="/register">Register</a>
-          </li>
-          <li class="nav-item"><a class="nav-link" href="/help">Help</a></li>
-        </ul>
-      </div>
-    </nav>
+    <!-- Include Navbar -->
+    <% include partials/navbar %>
 
-    <!-- Welcome Content -->
     <div class="container mt-5 text-center">
       <h2>Welcome to the Banking System</h2>
       <p>Your secure, online solution for managing your finances.</p>
-      <a href="/login" class="btn btn-primary m-2">Login</a>
-      <a href="/register" class="btn btn-secondary m-2">Register</a>
+      <% if (!session.user) { %>
+        <a href="/login" class="btn btn-primary m-2">Login</a>
+        <a href="/register" class="btn btn-secondary m-2">Register</a>
+      <% } else { %>
+        <% if (session.user.role === 'customer') { %>
+          <a href="/customer/account" class="btn btn-success">Go to My Account</a>
+        <% } else if (session.user.role === 'employee') { %>
+          <a href="/employee/account" class="btn btn-info">Manage Customers</a>
+        <% } else if (session.user.role === 'admin') { %>
+          <a href="/admin/account" class="btn btn-warning">Manage Users</a>
+        <% } %>
+      <% } %>
     </div>
   </body>
 </html>

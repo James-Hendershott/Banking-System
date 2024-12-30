@@ -7,7 +7,6 @@ var session = require('express-session');
 var MySQLStore = require('express-mysql-session')(session); // Import MySQL session store
 
 // Adding routes
-var indexRouter = require('./routes/index');
 var loginRouter = require('./routes/login');
 var accountRouter = require('./routes/account');
 var transferRouter = require('./routes/transfer');
@@ -77,9 +76,18 @@ app.use('/admin', roleCheck.checkAdmin, adminRouter);
 app.use('/employee', roleCheck.checkEmployee, employeeRouter);
 app.use('/customer', roleCheck.checkCustomer, customerRouter);
 
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-    next(createError(404));
+// catch 404 and render a user-friendly error page
+app.use((req, res, next) => {
+    res.status(404).render('error', {
+    message: 'Page Not Found',
+    error: { status: 404 },
+    });
+});
+
+// Ensure the navbar partial is available in all views
+app.use((req, res, next) => {
+  res.locals.session = req.session; // Pass session to views
+next();
 });
 
 // error handler
