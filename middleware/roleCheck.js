@@ -1,62 +1,39 @@
-const db = require('../lib/database');
+const fs = require('fs');
+const path = require('path');
 
-module.exports = {
-    checkCustomer: (req, res, next) => {
-        console.log('Session User:', req.session.user);  // Log session user information
-        if (!req.session.user) {
-            return res.redirect('/login');
-        }
-        const userId = req.session.user.user_id;
+// Centralized logging utility
+function logError(message) {
+    const logPath = path.join(__dirname, '../logs/role_errors.log');
+    const timestamp = new Date().toISOString();
+    fs.appendFile(logPath, `[${timestamp}] ${message}\n`, (err) => {
+        if (err) console.error('Failed to log role error:', err);
+    });
+}
 
-        db.con.query(
-            `CALL fetch_user_by_id(?)`,
-            [userId],
-            (err, results) => {
-                if (err || results[0].length === 0 || results[0][0].role !== 'customer') {
-                    console.log('Role Check Failed: User not found or role mismatch');
-                    return res.redirect('/login');
-                }
-                console.log('Role Check Passed: User is customer');
-                next();
-            }
-        );
-    },
-    checkEmployee: (req, res, next) => {
-        console.log('Session User:', req.session.user);
-        if (!req.session.user) {
-            return res.redirect('/login');
-        }
-        const userId = req.session.user.user_id;
+// Middleware for role validation
+function validateRole(requiredRole, req, res, next) {
+    const user = req.session?.user;
+    if (!user) {
+        logError(`Unauthorized access attempt: No user session.`);
+        return res.redirect('/login');
+    }
 
-        db.con.query(
-            `CALL fetch_user_by_id(?)`,
-            [userId],
-            (err, results) => {
-                if (err || results[0].length === 0 || results[0][0].role !== 'employee') {
-                    console.error('Role Check Failed: User not found or role mismatch');
-                    return res.redirect('/login');
-                }
-                next();
-            }
-        );
-    },
-    checkAdmin: (req, res, next) => {
-        console.log('Session User:', req.session.user);
-        if (!req.session.user) {
-            return res.redirect('/login');
-        }
-        const userId = req.session.user.user_id;
+    if (user.role !== requiredRole) {
+        logError(`Role mismatch: User ID ${user.user_id}, Role ${user.role}, Required ${requiredRole}`);
+        return res.status(403).render('error', {
+            message: `Access denied: ${requiredRole} role required.`,
+            error: { status: 403 },
+        });
+    }
 
-        db.con.query(
-            `CALL fetch_user_by_id(?)`,
-            [userId],
-            (err, results) => {
-                if (err || results[0].length === 0 || results[0][0].role !== 'admin') {
-                    console.error('Role Check Failed: User not found or role mismatch');
-                    return res.redirect('/login');
-                }
-                next();
-            }
-        );
-    },
+    next(); // Proceed to the next middleware/route
+}
+
+// Specific middleware for roles
+const roleCheck = {
+    checkCustomer: (req, res, next) => validateRole('customer', req, res, next),
+    checkEmployee: (req, res, next) => validateRole('employee', req, res, next),
+    checkAdmin: (req, res, next) => validateRole('admin', req, res, next),
 };
+
+module.exports = roleCheck;
