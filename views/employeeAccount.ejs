@@ -19,13 +19,15 @@
       <div class="card mt-4">
         <div class="card-body">
           <h5>
-            <a href="/employee/account/checking" class="text-decoration-none">
-              Checking Account Balance: $<%= employeeData.checkingBalance.toFixed(2) %>
+            Checking Account Balance: $<%= accounts.find(acc => acc.type === 'Checking').balance %>
+            <a href="/employee/account/checking/transactions" class="text-decoration-none ms-3">
+              View Transactions
             </a>
           </h5>
           <h5>
-            <a href="/employee/account/savings" class="text-decoration-none">
-              Savings Account Balance: $<%= employeeData.savingsBalance.toFixed(2) %>
+            Savings Account Balance: $<%= accounts.find(acc => acc.type === 'Savings').balance %>
+            <a href="/employee/account/savings/transactions" class="text-decoration-none ms-3">
+              View Transactions
             </a>
           </h5>
         </div>
