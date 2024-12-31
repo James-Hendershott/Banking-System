@@ -6,13 +6,20 @@ const roleCheck = require('../middleware/roleCheck');
 // Render Employee Account Overview
 router.get('/account', roleCheck.checkEmployee, async (req, res) => {
     try {
-        const userId = req.session.user.user_id; // Employee ID from session
-        const accounts = await fetchUserAccounts(userId); // Fetch employee's accounts
-        res.render('employeeAccount', { accounts });
+        const userId = req.session.user.user_id; // Extract employee's user ID
+        const accounts = await fetchUserAccounts(userId); // Fetch accounts linked to the employee
+
+        if (!accounts || accounts.length === 0) {
+            throw new Error('No accounts found for this employee.');
+        }
+
+        res.render('employeeAccount', { accounts }); // Pass account data to the view
     } catch (error) {
-        res.render('employeeAccount', { error: 'Error loading account details.' });
+        console.error('Error fetching employee accounts:', error.message);
+        res.status(500).render('employeeAccount', { error: 'Error loading account details.' });
     }
 });
+
 
 // Transaction History for Checking Account
 router.get('/account/checking/transactions', roleCheck.checkEmployee, async (req, res) => {

@@ -18,17 +18,29 @@
       <!-- Employee Account Details -->
       <div class="card mt-4">
         <div class="card-body">
+          <% const checkingAccount = accounts.find(acc => acc.type === 'Checking'); %>
+          <% const savingsAccount = accounts.find(acc => acc.type === 'Savings'); %>
+
           <h5>
-            Checking Account Balance: $<%= accounts.find(acc => acc.type === 'Checking').balance %>
-            <a href="/employee/account/checking/transactions" class="text-decoration-none ms-3">
-              View Transactions
-            </a>
+            <% if (checkingAccount) { %>
+              Checking Account Balance: $<%= checkingAccount.balance.toFixed(2) %>
+              <a href="/employee/account/checking/transactions" class="text-decoration-none ms-3">
+                View Transactions
+              </a>
+            <% } else { %>
+              Checking Account: Not Found
+            <% } %>
           </h5>
+
           <h5>
-            Savings Account Balance: $<%= accounts.find(acc => acc.type === 'Savings').balance %>
-            <a href="/employee/account/savings/transactions" class="text-decoration-none ms-3">
-              View Transactions
-            </a>
+            <% if (savingsAccount) { %>
+              Savings Account Balance: $<%= savingsAccount.balance.toFixed(2) %>
+              <a href="/employee/account/savings/transactions" class="text-decoration-none ms-3">
+                View Transactions
+              </a>
+            <% } else { %>
+              Savings Account: Not Found
+            <% } %>
           </h5>
         </div>
       </div>
