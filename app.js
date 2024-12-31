@@ -25,6 +25,9 @@ const db = require('./lib/database'); // Database module
 const sessionPool = require('./lib/sessionPool'); // Session pool for session storage
 
 const app = express();
+// Set the view engine and views directory
+app.set('views', path.join(__dirname, 'views')); // Define the views directory
+app.set('view engine', 'ejs'); // Use EJS as the view engine
 
 // Set up session store
 var sessionStore = new MySQLStore({}, sessionPool);
