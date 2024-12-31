@@ -6,47 +6,53 @@
     <title>Register</title>
     <link rel="stylesheet" href="/css/bootstrap.min.css" />
     <link rel="stylesheet" href="/bootstrap-icons.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script>
+      function prepareUserData(event) {
+        const password = document.getElementById("password").value;
+
+        if (!password) {
+          alert("Password is required.");
+          event.preventDefault();
+          return;
+        }
+
+        const salt = CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);
+        const hashedPassword = CryptoJS.SHA256(salt + password).toString(CryptoJS.enc.Hex);
+
+        document.getElementById("salt").value = salt;
+        document.getElementById("hashedPassword").value = hashedPassword;
+      }
+    </script>
   </head>
   <body>
     <!-- Navbar -->
     <%- include('partials/navbar') %>
 
     <!-- Registration Form -->
-    <div
-      class="container-fluid vh-100 d-flex justify-content-center align-items-center"
-    >
+    <div class="container-fluid vh-100 d-flex justify-content-center align-items-center">
       <div class="col-md-6 col-lg-4 shadow p-4 bg-white rounded">
         <h2 class="text-center text-primary mb-4">Register</h2>
-          <!-- Error message section -->
-          <% if (typeof error !== 'undefined') { %>
+        <% if (typeof error !== 'undefined') { %>
           <div class="alert alert-danger text-center" role="alert">
             <%= error %>
           </div>
-          <% } %>
-        <form action="/register" method="POST">
+        <% } %>
+        <form action="/register" method="POST" onsubmit="prepareUserData(event)">
+          <input type="hidden" id="salt" name="salt" />
+          <input type="hidden" id="hashedPassword" name="hashedPassword" />
+
           <div class="mb-3">
             <label for="firstName" class="form-label">
               <i class="bi bi-person-fill"></i> First Name
             </label>
-            <input
-              type="text"
-              id="firstName"
-              name="firstName"
-              class="form-control"
-              required
-            />
+            <input type="text" id="firstName" name="firstName" class="form-control" required />
           </div>
           <div class="mb-3">
             <label for="lastName" class="form-label">
               <i class="bi bi-person-fill"></i> Last Name
             </label>
-            <input
-              type="text"
-              id="lastName"
-              name="lastName"
-              class="form-control"
-              required
-            />
+            <input type="text" id="lastName" name="lastName" class="form-control" required />
           </div>
           <div class="mb-3">
             <label for="email" class="form-label">
@@ -65,13 +71,7 @@
             <label for="password" class="form-label">
               <i class="bi bi-lock-fill"></i> Password
             </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              class="form-control"
-              required
-            />
+            <input type="password" id="password" name="password" class="form-control" required />
           </div>
           <button type="submit" class="btn btn-primary w-100">
             <i class="bi bi-box-arrow-in-right"></i> Register

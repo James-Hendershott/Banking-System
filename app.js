@@ -18,6 +18,7 @@ const forgotPasswordRouter = require('./routes/forgotPassword');
 const adminRouter = require('./routes/admin');
 const employeeRouter = require('./routes/employee');
 const customerRouter = require('./routes/customer');
+const logoutRouter = require('./routes/logout');
 
 // Import middleware
 const roleCheck = require('./middleware/roleCheck');
@@ -73,6 +74,7 @@ app.use('/login', loginRouter); // Login functionality
 app.use('/register', registerRouter); // Registration functionality
 app.use('/help', helpRouter); // Help page
 app.use('/forgot-password', forgotPasswordRouter); // Password recovery
+app.use('/logout', logoutRouter); // Logout
 
 // Role-protected routes
 app.use('/account', roleCheck.checkCustomer, accountRouter); // Customer account management

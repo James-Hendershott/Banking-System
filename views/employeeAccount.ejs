@@ -20,12 +20,12 @@
         <div class="card-body">
           <h5>
             <a href="/employee/account/checking" class="text-decoration-none">
-              Checking Account Balance: $<%= employeeData.checkingBalance %>
+              Checking Account Balance: $<%= employeeData.checkingBalance.toFixed(2) %>
             </a>
           </h5>
           <h5>
             <a href="/employee/account/savings" class="text-decoration-none">
-              Savings Account Balance: $<%= employeeData.savingsBalance %>
+              Savings Account Balance: $<%= employeeData.savingsBalance.toFixed(2) %>
             </a>
           </h5>
         </div>
@@ -34,11 +34,15 @@
       <!-- Transaction History -->
       <h4 class="mt-5">Transaction History</h4>
       <ul class="list-group">
-        <% employeeData.recentTransactions.forEach(transaction => { %>
-        <li class="list-group-item">
-          <%= transaction.date %> - <%= transaction.type %> - $<%= transaction.amount %>
-        </li>
-        <% }) %>
+        <% if (employeeData.recentTransactions.length > 0) { %>
+          <% employeeData.recentTransactions.forEach(transaction => { %>
+            <li class="list-group-item">
+              <%= transaction.timestamp %> - <%= transaction.type %> - $<%= transaction.amount.toFixed(2) %>
+            </li>
+          <% }) %>
+        <% } else { %>
+          <li class="list-group-item">No recent transactions.</li>
+        <% } %>
       </ul>
 
       <!-- Customer Account Management Form -->
