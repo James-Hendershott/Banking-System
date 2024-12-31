@@ -1,23 +1,22 @@
-
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
 const db = require('../lib/database'); // Import database module
 const crypto = require('crypto'); // For hashing
 
-// GET login page
-router.get('/', function (req, res) {
-    res.render('login');
+// Render login page
+router.get('/', (req, res) => {
+    res.render('login'); // Display the login form
 });
 
-// POST login credentials
-router.post('/', function (req, res) {
+// Handle login form submission
+router.post('/', (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
         return res.render('login', { error: 'All fields are required.' });
     }
 
-    // Fetch salt for the given username
+    // Fetch salt for the username
     db.con.query(`CALL get_salt(?)`, [username], (err, saltResults) => {
         if (err || saltResults[0].length === 0) {
             return res.render('login', { error: 'Invalid username or password.' });
@@ -29,16 +28,16 @@ router.post('/', function (req, res) {
             .update(salt + password) // Concatenate salt and input password
             .digest('hex');
 
-        // Fetch user details using the stored procedure
+        // Validate login with stored procedure
         db.con.query(`CALL validate_login(?)`, [username], (err, results) => {
             if (err || results[0].length === 0) {
                 return res.render('login', { error: 'Invalid username or password.' });
             }
 
-            const user = results[0][0]; // Extract the user data from the stored procedure
+            const user = results[0][0]; // Extract user data
             const storedPassword = user.hashed_password;
 
-            // Compare hashed password with stored hashed password
+            // Compare hashed passwords
             if (hashedPassword !== storedPassword) {
                 return res.render('login', { error: 'Invalid username or password.' });
             }
@@ -50,14 +49,14 @@ router.post('/', function (req, res) {
                 role: user.role,
             };
 
-            // Save the session and redirect based on role
+            // Redirect based on role
             req.session.save((err) => {
                 if (err) {
                     console.error('Error saving session:', err);
                     return res.render('login', { error: 'An error occurred. Please try again later.' });
                 }
 
-                // Redirect based on role
+                // Role-based redirection
                 if (user.role === 'admin') {
                     res.redirect('/admin/account');
                 } else if (user.role === 'employee') {
@@ -73,3 +72,4 @@ router.post('/', function (req, res) {
 });
 
 module.exports = router;
+// ===== End of login.js =====

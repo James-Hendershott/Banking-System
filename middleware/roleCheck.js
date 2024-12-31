@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-// Centralized logging utility
+// Utility for logging unauthorized access attempts
 function logError(message) {
     const logPath = path.join(__dirname, '../logs/role_errors.log');
     const timestamp = new Date().toISOString();
@@ -10,12 +10,12 @@ function logError(message) {
     });
 }
 
-// Middleware for role validation
+// Middleware to validate the user's role for a specific route
 function validateRole(requiredRole, req, res, next) {
     const user = req.session?.user;
     if (!user) {
         logError(`Unauthorized access attempt: No user session.`);
-        return res.redirect('/login');
+        return res.redirect('/login'); // Redirect to login if no session exists
     }
 
     if (user.role !== requiredRole) {
@@ -29,7 +29,7 @@ function validateRole(requiredRole, req, res, next) {
     next(); // Proceed to the next middleware/route
 }
 
-// Specific middleware for roles
+// Predefined middleware for specific roles
 const roleCheck = {
     checkCustomer: (req, res, next) => validateRole('customer', req, res, next),
     checkEmployee: (req, res, next) => validateRole('employee', req, res, next),

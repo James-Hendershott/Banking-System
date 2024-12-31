@@ -8,18 +8,20 @@
     <link rel="stylesheet" href="/bootstrap-icons.css" />
   </head>
   <body>
-    <!-- Navbar -->
+    <!-- Include Navbar -->
     <% include partials/navbar %>
 
+    <!-- Main Container -->
     <div class="container mt-5">
       <h2 class="text-center">Transaction History</h2>
-      
+
       <!-- Error Message -->
       <% if (typeof error !== 'undefined') { %>
       <div class="alert alert-danger text-center" role="alert">
         <%= error %>
       </div>
       <% } else { %>
+
       <!-- Transaction Table -->
       <table class="table table-striped mt-4">
         <thead>
@@ -33,6 +35,7 @@
         <tbody>
           <% transactions.forEach(transaction => { %>
           <tr>
+            <!-- Display each transaction's details -->
             <td><%= transaction.timestamp %></td>
             <td><%= transaction.type %></td>
             <td>$<%= transaction.amount.toFixed(2) %></td>

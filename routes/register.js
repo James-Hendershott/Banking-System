@@ -1,25 +1,26 @@
-var express = require('express');
-var router = express.Router();
+
+const express = require('express');
+const router = express.Router();
 const db = require('../lib/database');
-const crypto = require('crypto'); // For salt and hashing
+const crypto = require('crypto'); // For generating salt and hashing passwords
 
-// Function to generate a random username
+// Generate a random username
 function generateUsername() {
-    return 'user' + Math.floor(Math.random() * 900000 + 100000); // Generates a 6-digit random number
+    return 'user' + Math.floor(Math.random() * 900000 + 100000); // 6-digit random number
 }
 
-// Function to generate a random salt
+// Generate a random salt
 function generateSalt() {
-    return crypto.randomBytes(16).toString('hex'); // Generate a 16-byte salt
+    return crypto.randomBytes(16).toString('hex'); // Generate 16-byte salt
 }
 
-// GET registration page
-router.get('/', function (req, res) {
-    res.render('register');
+// Render registration page
+router.get('/', (req, res) => {
+    res.render('register'); // Display the registration form
 });
 
-// POST registration form submission
-router.post('/', function (req, res) {
+// Handle registration form submission
+router.post('/', (req, res) => {
     const { firstName, lastName, email, password } = req.body;
 
     if (!firstName || !lastName || !email || !password) {
@@ -27,33 +28,33 @@ router.post('/', function (req, res) {
     }
 
     try {
-        // Generate a random username
+        // Generate username and salt
         const uniqueID = generateUsername();
-
-        // Generate a random salt and hash the password
         const salt = generateSalt();
+
+        // Hash the password
         const hashedPassword = crypto
             .createHash('sha256')
             .update(salt + password) // Concatenate salt and password
             .digest('hex');
 
-        // Insert user into the database using a stored procedure
+        // Register user using a stored procedure
         db.con.query(
             `CALL register_user(?, ?, ?, ?, ?, @result)`,
             [uniqueID, hashedPassword, salt, firstName, lastName, email],
-            (err, results) => {
+            (err) => {
                 if (err) {
                     console.error(err);
                     return res.render('register', { error: 'Registration failed. Please try again.' });
                 }
 
-                // Check if the stored procedure succeeded
+                // Check stored procedure result
                 db.con.query('SELECT @result AS result', (err, resultCheck) => {
                     if (err || resultCheck[0].result !== 0) {
                         return res.render('register', { error: 'User already exists or registration failed.' });
                     }
 
-                    // Pass the generated username (uniqueID) and firstName to the success page
+                    // Render success page
                     res.render('registerSuccess', { uniqueID, firstName });
                 });
             }

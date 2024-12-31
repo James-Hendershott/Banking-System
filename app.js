@@ -22,7 +22,7 @@ const customerRouter = require('./routes/customer');
 // Import middleware
 const roleCheck = require('./middleware/roleCheck');
 const db = require('./lib/database'); // Database module
-const sessionPool = require('./lib/sessionPool'); // Session pool
+const sessionPool = require('./lib/sessionPool'); // Session pool for session storage
 
 const app = express();
 
@@ -32,54 +32,55 @@ var sessionStore = new MySQLStore({}, sessionPool);
 // Session middleware
 app.use(
     session({
-        key: 'user_session_cookie',
-        secret: process.env.SESSION_SECRET || 'yourSecretKey', // Secure for production
+        key: 'user_session_cookie', // Cookie name
+        secret: process.env.SESSION_SECRET || 'yourSecretKey', // Secure secret
         store: sessionStore,
-        resave: false, // Do not save session if not modified
-        saveUninitialized: false, // Do not create session until something is stored
+        resave: false, // Do not save session if unmodified
+        saveUninitialized: false, // Do not create empty sessions
         cookie: {
-            secure: process.env.NODE_ENV === 'production', // Set to true in production with HTTPS
-            maxAge: 1000 * 60 * 60 * 24, // Set session cookie expiration to 1 day
+            secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+            maxAge: 1000 * 60 * 60 * 24, // 1-day expiration
         },
     })
 );
 
 // Initialize the database
-db.initializeDatabase();
+db.initializeDatabase(); // Ensure database is set up and ready
 
 // Logging and parsers
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
+app.use(logger('dev')); // Use Morgan for logging HTTP requests
+app.use(express.json()); // Parse JSON request bodies
+app.use(express.urlencoded({ extended: false })); // Parse URL-encoded request bodies
+app.use(cookieParser()); // Parse cookies
 
 // Static files
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static(path.join(__dirname, 'node_modules/bootstrap/dist/')));
-app.use(express.static(path.join(__dirname, 'node_modules/bootstrap-icons/font')));
+app.use(express.static(path.join(__dirname, 'public'))); // Public directory
+app.use(express.static(path.join(__dirname, 'node_modules/bootstrap/dist/'))); // Bootstrap CSS and JS
+app.use(express.static(path.join(__dirname, 'node_modules/bootstrap-icons/font'))); // Bootstrap icons
 
 // Session data for views
 app.use((req, res, next) => {
-    res.locals.session = req.session;
+    res.locals.session = req.session; // Make session data available to views
     next();
 });
 
 // Public routes
-app.use('/', homeRouter);
-app.use('/login', loginRouter);
-app.use('/register', registerRouter);
-app.use('/help', helpRouter);
-app.use('/forgot-password', forgotPasswordRouter);
+app.use('/', homeRouter); // Home page
+app.use('/login', loginRouter); // Login functionality
+app.use('/register', registerRouter); // Registration functionality
+app.use('/help', helpRouter); // Help page
+app.use('/forgot-password', forgotPasswordRouter); // Password recovery
 
 // Role-protected routes
-app.use('/account', roleCheck.checkCustomer, accountRouter);
-app.use('/transaction', roleCheck.checkCustomer, transactionRouter);
-app.use('/transfer', roleCheck.checkCustomer, transferRouter);
-app.use('/admin', roleCheck.checkAdmin, adminRouter);
-app.use('/employee', roleCheck.checkEmployee, employeeRouter);
-app.use('/customer', roleCheck.checkCustomer, customerRouter);
+app.use('/account', roleCheck.checkCustomer, accountRouter); // Customer account management
+app.use('/transaction', roleCheck.checkCustomer, transactionRouter); // Customer transactions
+app.use('/transfer', roleCheck.checkCustomer, transferRouter); // Customer funds transfer
+app.use('/admin', roleCheck.checkAdmin, adminRouter); // Admin management
+app.use('/employee', roleCheck.checkEmployee, employeeRouter); // Employee actions
+app.use('/customer', roleCheck.checkCustomer, customerRouter); // Customer actions
 
 // Error handling
+// Handle 404 errors (Page Not Found)
 app.use((req, res, next) => {
     res.status(404).render('error', {
         message: 'Page Not Found',
@@ -87,10 +88,11 @@ app.use((req, res, next) => {
     });
 });
 
+// General error handler
 app.use((err, req, res, next) => {
     res.locals.message = err.message;
-    res.locals.error = req.app.get('env') === 'development' ? err : {};
-    res.status(err.status || 500).render('error');
+    res.locals.error = req.app.get('env') === 'development' ? err : {}; // Show stack trace in dev mode
+    res.status(err.status || 500).render('error'); // Render error view
 });
 
 module.exports = app;

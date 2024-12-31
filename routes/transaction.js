@@ -1,42 +1,44 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
+const db = require('../lib/database'); // Database module for querying
 
-/* GET transaction history page */
-router.get('/', function(req, res, next) {
-    console.log("transaction.js: GET");
+// Render transaction history page
+router.get('/', (req, res) => {
+    console.log("transaction.js: GET - Fetching transaction history");
 
-    // Sample transaction data this will eventually be pulled from database
-    const transactions = [
-        { date: '2024-11-01', type: 'Deposit', amount: 200.00, memo: 'Grocery Shopping' },
-        { date: '2024-11-02', type: 'Withdrawal', amount: 150.00, memo: 'Electric Bill' },
-        { date: '2024-11-03', type: 'Deposit', amount: 500.00, memo: 'Rent Payment' },
-        { date: '2024-11-04', type: 'Withdrawal', amount: 1000.00, memo: 'Paycheck' }
-    ];
+    const userId = req.session.user ? req.session.user.user_id : null;
 
-    // Determine back link based on user role
-    let backLink = '/customer/account'; // Default for customers
-    if (req.session.user) {
-        if (req.session.user.role === 'employee') {
-            backLink = '/employee/account'; // For employees
-        }
+    // Check if user is logged in
+    if (!userId) {
+        return res.redirect('/login');
     }
 
-    // Check if accountType is set in the query
-    const accountType = req.query.accountType || "Combined"; // Default to Combined
+    // Fetch transactions from the database for the logged-in user
+    db.con.query(
+        `CALL fetch_transactions(?)`,
+        [userId],
+        (err, results) => {
+            if (err) {
+                console.error('Error fetching transactions:', err);
+                return res.render('transaction', { error: 'Unable to fetch transactions.' });
+            }
 
-    // Render transaction view with transactions and back link
-    res.render('transaction', { 
-        transactionHistory: transactions, // Pass the transactions array
-        accountType, // Pass the accountType to the view
-        backLink 
-    });
+            // Pass transaction history and user details to the view
+            res.render('transaction', {
+                transactionHistory: results[0], // Transactions fetched from the database
+                accountType: "Combined", // Default to Combined
+                backLink: `/${req.session.user.role}/account`, // Back link based on user role
+            });
+        }
+    );
 });
 
-/* POST transaction actions (if needed) */
-router.post('/', function(req, res, next) {
-    console.log("transaction.js: POST");
-    // Handle form submissions or actions here
-    res.redirect('/transaction'); // Redirect back to the transaction page after handling
+// Handle form submissions or additional actions (if needed)
+router.post('/', (req, res) => {
+    console.log("transaction.js: POST - Handling transaction actions");
+
+    // Example: Redirect back to the transaction page after handling
+    res.redirect('/transaction');
 });
 
 module.exports = router;

@@ -1,20 +1,25 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
 
-// GET forgot password page
-router.get('/', function(req, res) {
-  res.render('forgotPassword'); // Render the forgot password form
+// Render forgot password page
+router.get('/', (req, res) => {
+    res.render('forgotPassword'); // Display the forgot password form
 });
 
-// POST handle forgot password form submission
-router.post('/', function(req, res) {
-  const { email } = req.body;
+// Handle forgot password form submission
+router.post('/', (req, res) => {
+    const { email } = req.body;
 
-  // Placeholder for sending password reset instructions (e.g., email with reset link)
-  console.log(`Password reset requested for email: ${email}`);
+    if (!email) {
+        return res.render('forgotPassword', { error: 'Email is required.' });
+    }
 
-  // Render a confirmation page or message
-  res.render('forgotPasswordConfirmation', { email });
+    // Placeholder for sending password reset instructions (e.g., via email)
+    console.log(`Password reset requested for email: ${email}`);
+
+    // Render a confirmation page
+    res.render('forgotPasswordConfirmation', { email });
 });
 
 module.exports = router;
+
