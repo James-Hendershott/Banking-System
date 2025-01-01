@@ -59,43 +59,53 @@ router.get('/transactions/:accountId', roleCheck.checkCustomer, async (req, res)
     }
 });
 
-// Deposit Route
 router.post('/deposit', async (req, res) => {
     const { account_id, amount, deposit_type, validation } = req.body;
 
-    if (!account_id || !amount || amount <= 0) {
-        return res.render('error', { message: 'Invalid deposit input.' });
-    }
-
     try {
-        const userId = req.session.user.user_id;
+        if (!account_id || amount <= 0) throw new Error('Invalid deposit input.');
 
-        // Perform deposit logic and validation
-        await db.con.promise().query('CALL add_transaction(?, ?, ?, ?)', [account_id, null, amount, Deposit (${deposit_type})]);
-        res.redirect(/${req.session.user.role}/account);
+        await db.con.promise().query('CALL add_transaction(?, ?, ?, ?)', [account_id, null, amount, `Deposit (${deposit_type})`]);
+        res.redirect(`/${req.session.user.role}/account`);
     } catch (error) {
         console.error('Error processing deposit:', error.message);
-        res.render('error', { message: 'Unable to process deposit.' });
+        res.render('error', { message: 'Unable to process deposit.', error });
     }
 });
 
-// Withdraw Route
 router.post('/withdraw', async (req, res) => {
     const { account_id, amount } = req.body;
 
-    if (!account_id || !amount || amount <= 0) {
-        return res.render('error', { message: 'Invalid withdrawal input.' });
-    }
-
     try {
-        const userId = req.session.user.user_id;
+        if (!account_id || amount <= 0) throw new Error('Invalid withdrawal input.');
 
-        // Perform withdrawal logic and validation
         await db.con.promise().query('CALL add_transaction(?, ?, ?, ?)', [null, account_id, -amount, 'Withdrawal']);
-        res.redirect(/${req.session.user.role}/account);
+        res.redirect(`/${req.session.user.role}/account`);
     } catch (error) {
         console.error('Error processing withdrawal:', error.message);
-        res.render('error', { message: 'Unable to process withdrawal.' });
+        res.render('error', { message: 'Unable to process withdrawal.', error });
+    }
+});
+
+router.post('/change-password', roleCheck.checkCustomer, async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+
+    try {
+        if (!currentPassword || !newPassword) throw new Error('Both current and new passwords are required.');
+
+        const userId = req.session.user.user_id;
+        const user = await fetchUserById(userId);
+
+        // Validate current password
+        const hashedInputPassword = hashPassword(currentPassword, user.salt);
+        if (hashedInputPassword !== user.hashed_password) throw new Error('Incorrect current password.');
+
+        // Update password
+        await db.con.promise().query('CALL change_user_password(?, ?)', [user.username, newPassword]);
+        res.render('customerAccount', { message: 'Password updated successfully.' });
+    } catch (error) {
+        console.error('Error changing password:', error.message);
+        res.render('error', { message: 'Unable to change password.', error });
     }
 });
 
