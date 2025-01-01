@@ -17,44 +17,56 @@ router.get('/', (req, res) => {
 router.post('/', async (req, res) => {
     const { firstName, lastName, email, password, confirmPassword } = req.body;
 
+    // Check if all fields are provided
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
-    return res.render('register', { error: 'All fields are required.' });
+        return res.render('register', { error: 'All fields are required.' });
     }
 
+    // Check if passwords match
     if (password !== confirmPassword) {
-    return res.render('register', { error: 'Passwords do not match.' });
+        return res.render('register', { error: 'Passwords do not match.' });
     }
-
-    // Generate a unique username
-    const username = generateUsername();
-
-    // Generate salt and hashed password
-    const salt = crypto.randomBytes(16).toString('hex');
-    const hashedPassword = crypto.createHash('sha256').update(salt + password).digest('hex');
 
     try {
-    // Insert user into database
-    const insertUserQuery = `
-        INSERT INTO users (username, hashed_password, salt, first_name, last_name, email, user_role_id)
-        VALUES (?, ?, ?, ?, ?, ?, (SELECT id FROM user_roles WHERE type = 'regular'));
-    `;
-    await db.con.promise().query(insertUserQuery, [
-        username,
-        hashedPassword,
-        salt,
-        firstName,
-        lastName,
-        email,
-    ]);
+        // Generate username
+        const username = 'user' + Math.floor(Math.random() * 900000 + 100000);
 
-    console.log(`User '${username}' registered successfully.`);
+        // Generate salt and hash
+        const salt = crypto.randomBytes(16).toString('hex');
+        const hashedPassword = crypto.createHash('sha256').update(salt + password).digest('hex');
 
-    // Redirect user to their landing page
-    res.redirect('/customer/account'); // Assuming all new users are customers initially
+        // Register user in the database
+        await db.con.promise().query(`CALL register_user(?, ?, ?, ?, ?, ?, @result)`, [
+            username,
+            hashedPassword,
+            salt,
+            firstName,
+            lastName,
+            email,
+        ]);
+
+        const [result] = await db.con.promise().query('SELECT @result AS result');
+        if (result[0].result !== 0) {
+            return res.render('register', { error: 'Registration failed. User may already exist.' });
+        }
+
+        // Fetch the newly created user
+        const [[user]] = await db.con.promise().query(`SELECT * FROM users WHERE username = ?`, [username]);
+
+        // Set the session
+        req.session.user = {
+            user_id: user.user_id,
+            username: user.username,
+            role: 'customer',
+        };
+
+        // Redirect to the customer's landing page
+        res.redirect('/customer/account');
     } catch (error) {
-    console.error('Error registering user:', error.message);
-    res.render('register', { error: 'An error occurred during registration. Please try again.' });
+        console.error('Error during registration:', error);
+        res.render('register', { error: 'An error occurred during registration. Please try again.' });
     }
 });
+
 
 module.exports = router;
