@@ -94,7 +94,7 @@ router.post('/change-password', roleCheck.checkCustomer, async (req, res) => {
         if (!currentPassword || !newPassword) throw new Error('Both current and new passwords are required.');
 
         const userId = req.session.user.user_id;
-        const user = await fetchUserById(userId);
+        const user = await fetchUserByUsername(userId);
 
         // Validate current password
         const hashedInputPassword = hashPassword(currentPassword, user.salt);

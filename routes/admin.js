@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { fetchUserById, fetchUserAccounts } = require('../lib/dataUtils');
+const { fetchUserByUsername, fetchUserAccounts, fetchTransactions } = require('../lib/dataUtils');
 const roleCheck = require('../middleware/roleCheck');
 const db = require('../lib/database');
 
@@ -17,7 +17,7 @@ router.post('/account-search', roleCheck.checkAdmin, async (req, res) => {
         if (!username) throw new Error('Username is required.');
 
         // Fetch user details
-        const user = await fetchUserById(username);
+        const user = await fetchUserByUsername(username);
         if (!user) throw new Error('User not found.');
 
         // Fetch account types without balances
@@ -63,7 +63,7 @@ router.post('/promote-user', roleCheck.checkAdmin, async (req, res) => {
 
         if (!username) throw new Error('Username is required.');
 
-        const user = await fetchUserById(username);
+        const user = await fetchUserByUsername(username);
         if (!user) throw new Error('User not found.');
 
         const accounts = await fetchUserAccounts(user.user_id);
