@@ -3,66 +3,58 @@ const router = express.Router();
 const { fetchUserAccounts, fetchTransactions } = require('../lib/dataUtils');
 const roleCheck = require('../middleware/roleCheck');
 
-// Render Employee Account Overview
+// Render Employee Account Overview (My Own Account)
 router.get('/account', roleCheck.checkEmployee, async (req, res) => {
     try {
-        const userId = req.session.user.user_id; // Extract employee's user ID
-        const accounts = await fetchUserAccounts(userId); // Fetch accounts linked to the employee
+        const userId = req.session.user.user_id; // Employee's own user ID
+        const accounts = await fetchUserAccounts(userId);
 
         if (!accounts || accounts.length === 0) {
             throw new Error('No accounts found for this employee.');
         }
 
-        res.render('employeeAccount', { accounts }); // Pass account data to the view
+        res.render('employeeAccount', { accounts }); // Employee's own account details
     } catch (error) {
         console.error('Error fetching employee accounts:', error.message);
         res.status(500).render('employeeAccount', { error: 'Error loading account details.' });
     }
 });
 
+// Manage Customer Accounts (Search Page)
+router.get('/manage-customer', roleCheck.checkEmployee, (req, res) => {
+    res.render('searchCustomer'); // Render search form
+});
 
-// Transaction History for Checking Account
-router.get('/account/checking/transactions', roleCheck.checkEmployee, async (req, res) => {
+// Handle Search for Customer Accounts
+router.post('/manage-customer', roleCheck.checkEmployee, async (req, res) => {
+    const { customerId } = req.body;
+
     try {
-        const userId = req.session.user.user_id; // Employee ID from session
-        const accounts = await fetchUserAccounts(userId);
-        const checkingAccount = accounts.find(account => account.type === 'Checking');
+        const accounts = await fetchUserAccounts(customerId);
+        if (!accounts || accounts.length === 0) throw new Error('No accounts found for this customer.');
 
-        if (!checkingAccount) throw new Error('Checking account not found.');
-
-        const transactions = await fetchTransactions(checkingAccount.account_id);
-        res.render('transaction', {
-            transactions,
-            backLink: '/employee/account',
-        }); // Use transaction.ejs and pass transactions + backLink
+        res.render('employeeCustomerView', { accounts, customerId }); // Render customer accounts
     } catch (error) {
-        res.render('transaction', {
-            transactions: [],
-            error: error.message,
-            backLink: '/employee/account',
-        });
+        res.render('searchCustomer', { error: error.message }); // Return to search view with error
     }
 });
 
-// Transaction History for Savings Account
-router.get('/account/savings/transactions', roleCheck.checkEmployee, async (req, res) => {
+// View Transactions for Employee's Own or Customer Accounts
+router.get('/:type/:accountId/transactions', roleCheck.checkEmployee, async (req, res) => {
+    const { accountId, type } = req.params;
+
     try {
-        const userId = req.session.user.user_id; // Employee ID from session
-        const accounts = await fetchUserAccounts(userId);
-        const savingsAccount = accounts.find(account => account.type === 'Savings');
+        const transactions = await fetchTransactions(accountId);
 
-        if (!savingsAccount) throw new Error('Savings account not found.');
-
-        const transactions = await fetchTransactions(savingsAccount.account_id);
         res.render('transaction', {
             transactions,
-            backLink: '/employee/account',
-        }); // Use transaction.ejs and pass transactions + backLink
+            backLink: type === 'customer' ? '/employee/manage-customer' : '/employee/account', // BackLink based on type
+        });
     } catch (error) {
         res.render('transaction', {
             transactions: [],
             error: error.message,
-            backLink: '/employee/account',
+            backLink: type === 'customer' ? '/employee/manage-customer' : '/employee/account',
         });
     }
 });
