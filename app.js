@@ -95,7 +95,10 @@ app.use((req, res, next) => {
 app.use((err, req, res, next) => {
     res.locals.message = err.message;
     res.locals.error = req.app.get('env') === 'development' ? err : {}; // Show stack trace in dev mode
-    res.status(err.status || 500).render('error'); // Render error view
+    res.status(err.status || 500).render('error', {
+        message: err.message || 'Internal Server Error', // Error message
+        error: err // Pass the error object to the template
+    });
 });
 
 module.exports = app;

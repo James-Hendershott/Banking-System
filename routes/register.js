@@ -1,60 +1,26 @@
 const express = require('express');
 const router = express.Router();
-const crypto = require('crypto'); // For hashing and salt generation
-const db = require('../lib/database'); // Database module
+const db = require('../lib/database');
 
-// Generate a unique username
-function generateUsername() {
-    return 'user' + Math.floor(Math.random() * 900000 + 100000); // 6-digit random number
-}
-
-// Render registration page
+// Render registration form
 router.get('/', (req, res) => {
-    res.render('register'); // Display the registration form
+    res.render('register', { error: null });
 });
 
-// Handle registration form submission
+// Handle registration
 router.post('/', async (req, res) => {
-    const { firstName, lastName, email, password, confirmPassword } = req.body;
-
-    // Check if all fields are provided
-    if (!firstName || !lastName || !email || !password || !confirmPassword) {
-        return res.render('register', { error: 'All fields are required.' });
-    }
-
-    // Check if passwords match
-    if (password !== confirmPassword) {
-        return res.render('register', { error: 'Passwords do not match.' });
-    }
-
+    const { username, password, first_name, last_name, email } = req.body;
     try {
-        // Generate username
-        const username = generateUsername();
-
-        // Generate salt and hash
-        const salt = crypto.randomBytes(16).toString('hex');
-        const hashedPassword = crypto.createHash('sha256').update(salt + password).digest('hex');
-
-        // Register user in the database
-        await db.con.promise().query(`CALL register_user(?, ?, ?, ?, ?, ?, @result)`, [
-            username,
-            hashedPassword,
-            salt,
-            firstName,
-            lastName,
-            email,
-        ]);
-
-        const [result] = await db.con.promise().query('SELECT @result AS result');
-        if (result[0].result !== 0) {
-            return res.render('register', { error: 'Registration failed. User may already exist.' });
+        if (!username || !password || !first_name || !last_name || !email) {
+            throw new Error('All fields are required.');
         }
+        const salt = generateSalt();
+        const hashedPassword = hashPassword(password, salt);
 
-        // Redirect to the success page with the username
-        res.render('registerSuccess', { firstName, uniqueID: username });
+        await db.con.promise().query('CALL register_user(?, ?, ?, ?, ?, ?, ?)', [username, hashedPassword, salt, first_name, last_name, email]);
+        res.redirect('/login');
     } catch (error) {
-        console.error('Error during registration:', error);
-        res.render('register', { error: 'An error occurred during registration. Please try again.' });
+        res.render('register', { error: 'Error registering user. Please try again.' });
     }
 });
 

@@ -1,82 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Employee Account</title>
     <link rel="stylesheet" href="/css/bootstrap.min.css" />
     <link rel="stylesheet" href="/bootstrap-icons.css" />
-  </head>
-  <body>
+</head>
+<body>
     <!-- Include Navbar -->
     <%- include('partials/navbar') %>
 
-    <!-- Main Container -->
     <div class="container mt-5">
-      <h2 class="text-center text-primary">My Employee Account</h2>
+        <h2 class="text-center text-primary">Employee Account</h2>
 
-      <!-- Employee Account Details -->
-      <div class="card mt-4">
-        <div class="card-body">
-          <h5>
-            <% const checkingAccount = accounts.find(acc => acc.type === 'Checking'); %>
-            <% const savingsAccount = accounts.find(acc => acc.type === 'Savings'); %>
+        <div class="row mt-5">
+            <!-- Manage Own Account -->
+            <div class="col-md-6">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Manage My Own Account</h5>
+                        <p class="card-text">View your account details, transactions, and manage your funds.</p>
+                        <a href="/employee/own-account" class="btn btn-primary">
+                            <i class="bi bi-person-circle"></i> My Account
+                        </a>
+                    </div>
+                </div>
+            </div>
 
-            <% if (checkingAccount) { %>
-              Checking Account Balance: $<%= checkingAccount.balance.toFixed(2) %>
-              <a href="/employee/own/<%= checkingAccount.account_id %>/transactions" class="text-decoration-none ms-3">
-                View Transactions
-              </a>
-            <% } else { %>
-              Checking Account: Not Found
-            <% } %>
-          </h5>
-
-          <h5>
-            <% if (savingsAccount) { %>
-              Savings Account Balance: $<%= savingsAccount.balance.toFixed(2) %>
-              <a href="/employee/own/<%= savingsAccount.account_id %>/transactions" class="text-decoration-none ms-3">
-                View Transactions
-              </a>
-            <% } else { %>
-              Savings Account: Not Found
-            <% } %>
-          </h5>
+            <!-- Manage Customer Account -->
+            <div class="col-md-6">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Manage Customer Account</h5>
+                        <p class="card-text">Search for customer accounts and manage their finances.</p>
+                        <a href="/employee/manage-customer" class="btn btn-secondary">
+                            <i class="bi bi-people-fill"></i> Customer Management
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-
-      <!-- Transaction History -->
-      <h4 class="mt-5">Transaction History</h4>
-      <ul class="list-group">
-        <% if (recentTransactions && recentTransactions.length > 0) { %>
-          <% recentTransactions.forEach(transaction => { %>
-            <li class="list-group-item">
-              <%= transaction.timestamp %> - <%= transaction.type %> - $<%= transaction.amount.toFixed(2) %>
-            </li>
-          <% }) %>
-        <% } else { %>
-          <li class="list-group-item">No recent transactions.</li>
-        <% } %>
-      </ul>
-
-      <!-- Customer Account Management Form -->
-      <div class="container mt-4">
-        <h4>Search Customer Account</h4>
-        <form action="/employee/manage-customer" method="POST" class="mt-4">
-          <div class="input-group">
-            <input
-              type="text"
-              name="customerId"
-              class="form-control"
-              placeholder="Enter Customer ID"
-              required
-            />
-            <button type="submit" class="btn btn-primary">
-              <i class="bi bi-search"></i> View Customer Account
-            </button>
-          </div>
-        </form>
-      </div>
     </div>
-  </body>
+</body>
 </html>

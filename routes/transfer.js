@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../lib/database'); // Import database module
+const roleCheck = require('../middleware/roleCheck'); // Import roleCheck middleware
 
 // Render transfer funds page
-router.get('/', (req, res) => {
+router.get('/', roleCheck.checkRole(['customer', 'employee']), (req, res) => {
     console.log("transfer.js: GET - Loading transfer funds page");
 
     // Ensure the user is logged in
@@ -31,7 +32,7 @@ router.get('/', (req, res) => {
 });
 
 // Handle transfer funds action
-router.post('/', (req, res) => {
+router.post('/', roleCheck.checkRole(['customer', 'employee']), (req, res) => {
     console.log("transfer.js: POST - Processing fund transfer");
 
     const { fromAccount, toAccount, amount, memo } = req.body;
@@ -93,4 +94,3 @@ router.post('/', (req, res) => {
 });
 
 module.exports = router;
-
