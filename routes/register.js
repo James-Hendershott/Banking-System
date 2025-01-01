@@ -5,12 +5,12 @@ const db = require('../lib/database'); // Database module
 
 // Generate a unique username
 function generateUsername() {
-  return 'user' + Math.floor(Math.random() * 900000 + 100000); // 6-digit random number
+    return 'user' + Math.floor(Math.random() * 900000 + 100000); // 6-digit random number
 }
 
 // Render registration page
 router.get('/', (req, res) => {
-  res.render('register'); // Display the registration form
+    res.render('register'); // Display the registration form
 });
 
 // Handle registration form submission
@@ -29,7 +29,7 @@ router.post('/', async (req, res) => {
 
     try {
         // Generate username
-        const username = 'user' + Math.floor(Math.random() * 900000 + 100000);
+        const username = generateUsername();
 
         // Generate salt and hash
         const salt = crypto.randomBytes(16).toString('hex');
@@ -50,23 +50,12 @@ router.post('/', async (req, res) => {
             return res.render('register', { error: 'Registration failed. User may already exist.' });
         }
 
-        // Fetch the newly created user
-        const [[user]] = await db.con.promise().query(`SELECT * FROM users WHERE username = ?`, [username]);
-
-        // Set the session
-        req.session.user = {
-            user_id: user.user_id,
-            username: user.username,
-            role: 'customer',
-        };
-
-        // Redirect to the customer's landing page
-        res.redirect('/customer/account');
+        // Redirect to the success page with the username
+        res.render('registerSuccess', { firstName, uniqueID: username });
     } catch (error) {
         console.error('Error during registration:', error);
         res.render('register', { error: 'An error occurred during registration. Please try again.' });
     }
 });
-
 
 module.exports = router;
