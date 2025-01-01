@@ -7,12 +7,42 @@ const roleCheck = require('../middleware/roleCheck');
 router.get('/account', roleCheck.checkCustomer, async (req, res) => {
     try {
         const userId = req.session.user.user_id; // Extract user ID from session
-        const accounts = await fetchUserAccounts(userId); // Fetch associated accounts
-        res.render('customerAccount', { accounts }); // Pass accounts to the view
+        
+        // Fetch associated accounts
+        const accounts = await fetchUserAccounts(userId);
+
+        // Transform account data
+        const checkingAccount = accounts.find(account => account.account_type === 'Checking') || { balance: 0 };
+        const savingsAccount = accounts.find(account => account.account_type === 'Savings') || { balance: 0 };
+
+        // Fetch recent transactions (optional: limit to last 5 for simplicity)
+        const transactions = [];
+        for (const account of accounts) {
+            const accountTransactions = await fetchTransactions(account.account_id); // Assuming `account_id` is available
+            transactions.push(...accountTransactions);
+        }
+
+        transactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // Sort transactions by timestamp
+        const recentTransactions = transactions.slice(0, 5);
+
+        // Prepare customerData
+        const customerData = {
+            checkingBalance: checkingAccount.balance.toFixed(2),
+            savingsBalance: savingsAccount.balance.toFixed(2),
+            recentTransactions: recentTransactions.map(transaction => ({
+                date: new Date(transaction.timestamp).toLocaleString(),
+                type: transaction.type,
+                amount: transaction.amount.toFixed(2),
+            })),
+        };
+
+        res.render('customerAccount', { customerData });
     } catch (error) {
-        res.render('customerAccount', { error: 'Error loading account details.' });
+        console.error('Error fetching customer account details:', error.message);
+        res.status(500).render('error', { message: 'An error occurred while loading your account.' });
     }
 });
+
 
 // Render Transaction History for a Customer's Account
 router.get('/transactions/:accountId', roleCheck.checkCustomer, async (req, res) => {
