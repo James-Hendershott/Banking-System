@@ -13,10 +13,35 @@ router.get('/account', roleCheck.checkEmployee, async (req, res) => {
             throw new Error('No accounts found for this employee.');
         }
 
-        res.render('employeeAccount', { accounts }); // Employee's own account details
+        // Transform account data
+        const checkingAccount = accounts.find(account => account.account_type === 'Checking') || { balance: 0 };
+        const savingsAccount = accounts.find(account => account.account_type === 'Savings') || { balance: 0 };
+
+        // Fetch recent transactions (optional: limit to last 5 for simplicity)
+        const transactions = [];
+        for (const account of accounts) {
+            const accountTransactions = await fetchTransactions(account.account_id); // Assuming `account_id` is available
+            transactions.push(...accountTransactions);
+        }
+
+        transactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // Sort transactions by timestamp
+        const recentTransactions = transactions.slice(0, 5);
+
+        // Prepare employeeData
+        const employeeData = {
+            checkingBalance: checkingAccount.balance.toFixed(2),
+            savingsBalance: savingsAccount.balance.toFixed(2),
+            recentTransactions: recentTransactions.map(transaction => ({
+                timestamp: new Date(transaction.timestamp).toLocaleString(),
+                type: transaction.type,
+                amount: transaction.amount.toFixed(2),
+            })),
+        };
+
+        res.render('employeeAccount', { employeeData });
     } catch (error) {
-        console.error('Error fetching employee accounts:', error.message);
-        res.status(500).render('employeeAccount', { error: 'Error loading account details.' });
+        console.error('Error fetching employee account details:', error.message);
+        res.status(500).render('error', { message: 'An error occurred while loading your account.' });
     }
 });
 

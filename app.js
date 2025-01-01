@@ -8,7 +8,6 @@ const MySQLStore = require('express-mysql-session')(session); // Import MySQL se
 
 // Adding routes
 const loginRouter = require('./routes/login');
-const accountRouter = require('./routes/account');
 const transferRouter = require('./routes/transfer');
 const transactionRouter = require('./routes/transaction');
 const registerRouter = require('./routes/register');
@@ -77,7 +76,6 @@ app.use('/forgot-password', forgotPasswordRouter); // Password recovery
 app.use('/logout', logoutRouter); // Logout
 
 // Role-protected routes
-app.use('/account', roleCheck.checkCustomer, accountRouter); // Customer account management
 app.use('/transaction', roleCheck.checkCustomer, transactionRouter); // Customer transactions
 app.use('/transfer', roleCheck.checkCustomer, transferRouter); // Customer funds transfer
 app.use('/admin', roleCheck.checkAdmin, adminRouter); // Admin management
