@@ -1,43 +1,25 @@
 const express = require('express');
 const router = express.Router();
+const db = require('../lib/database'); // Ensure this is included
 const { fetchUserAccounts, fetchTransactions, fetchUserById } = require('../lib/dataUtils');
 const roleCheck = require('../middleware/roleCheck');
 
 // Render Customer Account Overview
 router.get('/account', roleCheck.checkCustomer, async (req, res) => {
     try {
-        const userId = req.session.user.user_id; // Customer's user ID
-        const accounts = await fetchUserAccounts(userId); // Fetch user's accounts
+        const userId = req.session.user.user_id;
+        const accounts = await fetchUserAccounts(userId);
 
         if (!accounts || accounts.length === 0) {
             throw new Error('No accounts found for this user.');
         }
 
-        // Ensure each account's balance is a number
         accounts.forEach(account => {
             account.balance = Number(account.balance || 0).toFixed(2);
         });
 
-        // Fetch recent transactions for all accounts
-        const transactions = [];
-        for (const account of accounts) {
-            const accountTransactions = await fetchTransactions(account.account_id);
-            transactions.push(...accountTransactions);
-        }
-
-        transactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // Sort by timestamp descending
-        const recentTransactions = transactions.slice(0, 5);
-
-        // Prepare the customer data object
-        const customerData = {
-            accounts, // Include all account details
-            recentTransactions: recentTransactions.map(transaction => ({
-                date: new Date(transaction.timestamp).toLocaleString(),
-                type: transaction.type,
-                amount: Number(transaction.amount).toFixed(2),
-                memo: transaction.memo || '',
-            })),
-        };
+        const customerData = { accounts };
+        console.log('Customer Data Accounts:', customerData.accounts); // Debugging log
 
         res.render('customerAccount', { customerData });
     } catch (error) {
@@ -49,62 +31,29 @@ router.get('/account', roleCheck.checkCustomer, async (req, res) => {
     }
 });
 
-// Render Checking Account Details
-router.get('/account/checking', roleCheck.checkCustomer, async (req, res) => {
-    try {
-        const userId = req.session.user.user_id;
-        const accounts = await fetchUserAccounts(userId);
-        const checkingAccount = accounts.find(account => account.account_type === 'Checking');
-
-        if (!checkingAccount) throw new Error('Checking account not found.');
-
-        const transactions = await fetchTransactions(checkingAccount.account_id);
-        res.render('transaction', { transactions });
-    } catch (error) {
-        console.error('Error loading checking account:', error.message);
-        res.status(500).render('error', { message: 'Unable to load checking account details.' });
-    }
-});
-
-// Render Savings Account Details
-router.get('/account/savings', roleCheck.checkCustomer, async (req, res) => {
-    try {
-        const userId = req.session.user.user_id;
-        const accounts = await fetchUserAccounts(userId);
-        const savingsAccount = accounts.find(account => account.account_type === 'Savings');
-
-        if (!savingsAccount) throw new Error('Savings account not found.');
-
-        const transactions = await fetchTransactions(savingsAccount.account_id);
-        res.render('transaction', { transactions });
-    } catch (error) {
-        console.error('Error loading savings account:', error.message);
-        res.status(500).render('error', { message: 'Unable to load savings account details.' });
-    }
-});
-
-
-// Render Transaction History for a Customer's Account
-router.get('/transactions/:accountId', roleCheck.checkCustomer, async (req, res) => {
-    try {
-        const { accountId } = req.params;
-        const transactions = await fetchTransactions(accountId); // Fetch transactions for the account
-        res.render('transaction', { transactions }); // Pass transaction data to the view
-    } catch (error) {
-        res.render('transaction', { error: 'Error fetching transactions.' });
-    }
-});
-
+// Handle Deposit
 router.post('/deposit', roleCheck.checkCustomer, async (req, res) => {
     const { account_id, amount, deposit_type, validation } = req.body;
 
     try {
         if (!account_id || isNaN(Number(amount)) || Number(amount) <= 0) {
-    console.error('Invalid input:', { account_id, amount });
-    throw new Error('Invalid deposit input. Please select an account and enter a positive amount.');
-    }
+            throw new Error('Invalid deposit input. Please select an account and enter a positive amount.');
+        }
 
-        await db.con.promise().query('CALL add_transaction(?, ?, ?, ?)', [account_id, null, amount, `Deposit (${deposit_type})`]);
+        // Validate deposit type
+        if (deposit_type === 'Check' && !validation) {
+            throw new Error('Please provide a check number for check deposits.');
+        }
+        if (deposit_type === 'Credit Card' && !/^\d{16}$/.test(validation)) {
+            throw new Error('Please provide a valid 16-digit credit card number.');
+        }
+
+        // Process deposit
+        const memo = `Deposit (${deposit_type}${validation ? `: ${validation}` : ''})`;
+        await db.con.promise().query('CALL add_transaction(?, ?, ?, ?)', [
+            account_id, null, amount, memo,
+        ]);
+
         res.redirect('/customer/account');
     } catch (error) {
         console.error('Error processing deposit:', error.message);
@@ -112,28 +61,26 @@ router.post('/deposit', roleCheck.checkCustomer, async (req, res) => {
     }
 });
 
+
+// Withdraw Route
 router.post('/withdraw', roleCheck.checkCustomer, async (req, res) => {
     const { account_id, amount } = req.body;
 
     try {
-        // Debugging: Log request body
-        console.log('Withdraw Request Body:', req.body);
-
-        // Validate input
         if (!account_id || isNaN(Number(amount)) || Number(amount) <= 0) {
-            console.error('Invalid input:', { account_id, amount });
             throw new Error('Invalid withdrawal input. Please select an account and enter a positive amount.');
         }
 
-
-        // Check account balance in the database
+        // Check sufficient funds
         const [rows] = await db.con.promise().query('SELECT balance FROM bank_accounts WHERE account_id = ?', [account_id]);
         if (!rows.length || rows[0].balance < amount) {
             throw new Error('Insufficient funds for withdrawal.');
         }
 
-        // Perform withdrawal
-        await db.con.promise().query('CALL add_transaction(?, ?, ?, ?)', [null, account_id, -amount, 'Withdrawal']);
+        // Process withdrawal
+        await db.con.promise().query('CALL add_transaction(?, ?, ?, ?)', [
+            null, account_id, -amount, 'Withdrawal',
+        ]);
 
         res.redirect('/customer/account');
     } catch (error) {
@@ -142,22 +89,92 @@ router.post('/withdraw', roleCheck.checkCustomer, async (req, res) => {
     }
 });
 
+
+// Handle Password Change
 router.post('/change-password', roleCheck.checkCustomer, async (req, res) => {
     const { currentPassword, newPassword } = req.body;
+
     try {
-        if (!currentPassword || !newPassword) throw new Error('Both current and new passwords are required.');
+        if (!currentPassword || !newPassword) {
+            throw new Error('Both current and new passwords are required.');
+        }
 
         const userId = req.session.user.user_id;
-        const user = await fetchUserById(userId);
 
-        const hashedInputPassword = hashPassword(currentPassword, user.salt);
-        if (hashedInputPassword !== user.hashed_password) throw new Error('Incorrect current password.');
+        // Fetch the current user's salt and hashed password from the database
+        const [userResults] = await db.con.promise().query('CALL fetch_user_by_id(?)', [userId]);
+        const user = userResults[0];
+        if (!user) throw new Error('User not found.');
 
-        await db.con.promise().query('CALL change_user_password(?, ?)', [user.username, newPassword]);
+        const currentSalt = user.salt; // Extract the salt
+        const storedHashedPassword = user.hashed_password; // Extract the stored hashed password
+
+        // Debugging Logs
+        console.log('Stored Hashed Password:', storedHashedPassword);
+        console.log('Current Salt:', currentSalt);
+        console.log('Input Current Password:', currentPassword);
+
+        // Hash the input current password with the current salt
+        const crypto = require('crypto');
+        const hashedInputPassword = crypto
+            .createHash('sha256')
+            .update(currentSalt + currentPassword) // Concatenate salt and input password
+            .digest('hex');
+
+        // Debugging Logs
+        console.log('Hashed Input Password:', hashedInputPassword);
+
+        // Compare the hashed input password with the stored hashed password
+        if (hashedInputPassword !== storedHashedPassword) {
+            throw new Error('Incorrect current password.');
+        }
+
+        // Generate a new salt and hash the new password
+        const newSalt = crypto.randomBytes(16).toString('hex'); // Generate a 16-byte random salt
+        const hashedNewPassword = crypto
+            .createHash('sha256')
+            .update(newSalt + newPassword) // Concatenate salt and new password
+            .digest('hex');
+
+        // Update the user's password and salt in the database
+        await db.con.promise().query(
+            'UPDATE users SET hashed_password = ?, salt = ? WHERE user_id = ?',
+            [hashedNewPassword, newSalt, userId]
+        );
+
         res.redirect('/customer/account');
     } catch (error) {
         console.error('Error changing password:', error.message);
         res.render('error', { message: 'Unable to change password.', error });
+    }
+});
+
+// Transfer Route
+router.post('/transfer', roleCheck.checkCustomer, async (req, res) => {
+    const { from_account_id, to_account_id, amount, memo } = req.body;
+
+    try {
+        console.log('Transfer Input:', { from_account_id, to_account_id, amount, memo }); // Debugging log
+
+        if (!from_account_id || !to_account_id || isNaN(Number(amount)) || Number(amount) <= 0) {
+            console.error('Invalid input detected:', { from_account_id, to_account_id, amount });
+            throw new Error('Invalid transfer input. Please select valid accounts and enter a positive amount.');
+        }
+
+        if (from_account_id === to_account_id) {
+            console.error('Same account selected for transfer:', from_account_id);
+            throw new Error('Cannot transfer funds between the same account.');
+        }
+
+        // Perform the transfer...
+        await db.con.promise().query('CALL add_transaction(?, ?, ?, ?)', [
+            from_account_id, to_account_id, -amount, memo || 'Transfer',
+        ]);
+
+        res.redirect('/customer/account');
+    } catch (error) {
+        console.error('Error during transfer:', error.message);
+        res.status(500).render('error', { message: 'Unable to process transfer.', error });
     }
 });
 

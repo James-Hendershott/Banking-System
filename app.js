@@ -81,6 +81,7 @@ app.use('/transfer', roleCheck.checkCustomer, transferRouter); // Customer funds
 app.use('/admin', roleCheck.checkAdmin, adminRouter); // Admin management
 app.use('/employee', roleCheck.checkEmployee, employeeRouter); // Employee actions
 app.use('/customer', roleCheck.checkCustomer, customerRouter); // Customer actions
+app.use(express.urlencoded({ extended: false })); // Parse URL-encoded form data
 
 // Error handling
 // Handle 404 errors (Page Not Found)
