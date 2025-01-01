@@ -19,6 +19,8 @@ router.get('/account', roleCheck.checkCustomer, async (req, res) => {
         });
 
         const customerData = { accounts };
+
+        // Add the debug log here
         console.log('Customer Data Accounts:', customerData.accounts); // Debugging log
 
         res.render('customerAccount', { customerData });
@@ -30,6 +32,7 @@ router.get('/account', roleCheck.checkCustomer, async (req, res) => {
         });
     }
 });
+
 
 // Handle Deposit
 router.post('/deposit', roleCheck.checkCustomer, async (req, res) => {
@@ -153,9 +156,9 @@ router.post('/change-password', roleCheck.checkCustomer, async (req, res) => {
 router.post('/transfer', roleCheck.checkCustomer, async (req, res) => {
     const { from_account_id, to_account_id, amount, memo } = req.body;
 
-    try {
-        console.log('Transfer Input:', { from_account_id, to_account_id, amount, memo }); // Debugging log
+    console.log('Transfer Input:', { from_account_id, to_account_id, amount, memo });
 
+    try {
         if (!from_account_id || !to_account_id || isNaN(Number(amount)) || Number(amount) <= 0) {
             console.error('Invalid input detected:', { from_account_id, to_account_id, amount });
             throw new Error('Invalid transfer input. Please select valid accounts and enter a positive amount.');
@@ -177,6 +180,7 @@ router.post('/transfer', roleCheck.checkCustomer, async (req, res) => {
         res.status(500).render('error', { message: 'Unable to process transfer.', error });
     }
 });
+
 
 
 module.exports = router;

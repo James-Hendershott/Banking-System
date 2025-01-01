@@ -46,20 +46,23 @@
           <div class="mb-3">
               <label for="fromAccount" class="form-label">From Account</label>
               <select name="from_account_id" id="fromAccount" class="form-select" required>
-                  <option value="" disabled selected>Select an account</option>
-                  <% customerData.accounts.forEach(account => { %>
-                  <option value="<%= account.account_id %>"><%= account.account_type %> ($<%= account.balance %>)</option>
-                  <% }); %>
-              </select>
+                <option value="" disabled selected>Select an account</option>
+                <% customerData.accounts.forEach(account => { %>
+                    <option value="<%= account.account_id %>"><%= account.account_type %> ($<%= account.balance %>)</option>
+                <% }); %>
+            </select>
+            
           </div>
           <div class="mb-3">
               <label for="toAccount" class="form-label">To Account</label>
               <select name="to_account_id" id="toAccount" class="form-select" required>
-                  <option value="" disabled selected>Select an account</option>
-                  <% customerData.accounts.forEach(account => { %>
-                  <option value="<%= account.account_id %>"><%= account.account_type %> ($<%= account.balance %>)</option>
-                  <% }); %>
-              </select>
+                <option value="" disabled selected>Select an account</option>
+                <% customerData.accounts.forEach(account => { %>
+                    <option value="<%= account.account_id %>"><%= account.account_type %> ($<%= account.balance %>)</option>
+                <% }); %>
+            </select>
+            <pre><%= JSON.stringify(customerData.accounts, null, 2) %></pre>
+
           </div>
           <div class="mb-3">
               <label for="transferAmount" class="form-label">Amount</label>
