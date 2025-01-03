@@ -19,7 +19,7 @@
     "http-errors": "~1.6.3",
     "morgan": "~1.9.1",
     "mysql": "^2.18.1",
-    "mysql2": "^3.11.4"
+    "mysql2": "^3.12.0"
   },
   "main": "app.js",
   "keywords": [],
