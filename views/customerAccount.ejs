@@ -17,26 +17,26 @@
     <div class="container mt-5">
       <h2 class="text-center text-primary">My Accounts</h2>
 
-      <!-- Account Balances -->
-      <div class="card mt-4">
-        <div class="card-body">
-          <% if (accounts.length > 0) { %>
-            <% accounts.forEach(account => { %>
-              <% if (account && account.account_type) { %>
-                <h5>
-                  <a href="/customer/account/<%= account.account_type.toLowerCase() %>" class="text-decoration-none">
-                    <%= account.account_type %> Account Balance: $<%= (account.balance || 0).toFixed(2) %>
-                  </a>
-                </h5>
-              <% } else { %>
-                <p class="text-danger">Account information is missing or invalid.</p>
-              <% } %>
-            <% }); %>
-          <% } else { %>
-            <p class="text-danger">No accounts found.</p>
-          <% } %>
-        </div>
+   <!-- Account Balances -->
+    <div class="card mt-4">
+      <div class="card-body">
+        <% if (Array.isArray(accounts) && accounts.length > 0) { %>
+          <% accounts.forEach(account => { %>
+            <% if (account && account.account_type) { %>
+              <h5>
+                <a href="/customer/account/<%= account.account_type.toLowerCase() %>" class="text-decoration-none">
+                  <%= account.account_type %> Account Balance: $<%= (account.balance || 0).toFixed(2) %>
+                </a>
+              </h5>
+            <% } else { %>
+              <p class="text-danger">Account information is missing or invalid.</p>
+            <% } %>
+          <% }); %>
+        <% } else { %>
+          <p class="text-danger">No accounts found.</p>
+        <% } %>
       </div>
+    </div>
 
       <!-- Recent Transactions -->
       <h4 class="mt-5">Recent Transactions</h4>
@@ -121,23 +121,29 @@
       </form>
 
       <!-- Withdraw Form -->
+      <!-- Withdraw Form -->
       <h5 class="mt-5">Withdraw Funds</h5>
       <form action="/customer/withdraw" method="POST" class="mt-3">
-        <div class="mb-3">
-          <label for="withdrawAccount" class="form-label">Withdraw Account</label>
-          <select name="account_id" id="withdrawAccount" class="form-select" required>
-            <option value="" disabled selected>Select an account</option>
-            <% accounts.forEach(account => { %>
-              <option value="<%= account.account_id %>"><%= account.account_type %> ($<%= account.balance %>)</option>
-            <% }); %>
-          </select>
-        </div>
-        <div class="mb-3">
-          <label for="withdrawAmount" class="form-label">Amount</label>
-          <input type="number" name="amount" id="withdrawAmount" class="form-control" min="0.01" step="0.01" required />
-        </div>
-        <button type="submit" class="btn btn-danger w-100">Withdraw Funds</button>
+          <div class="mb-3">
+              <label for="withdrawAccount" class="form-label">Withdraw Account</label>
+              <select name="account_id" id="withdrawAccount" class="form-select" required>
+                  <option value="" disabled selected>Select an account</option>
+                  <% accounts.forEach(account => { %>
+                      <option value="<%= account.account_id %>"><%= account.account_type %> ($<%= account.balance %>)</option>
+                  <% }); %>
+              </select>
+          </div>
+          <div class="mb-3">
+              <label for="withdrawAmount" class="form-label">Amount</label>
+              <input type="number" name="amount" id="withdrawAmount" class="form-control" min="0.01" step="0.01" required />
+          </div>
+          <div class="mb-3">
+              <label for="withdrawMemo" class="form-label">Memo (Optional)</label>
+              <input type="text" name="memo" id="withdrawMemo" class="form-control" placeholder="Enter a memo (optional)" />
+          </div>
+          <button type="submit" class="btn btn-danger w-100">Withdraw Funds</button>
       </form>
+
 
       <!-- Change Password Form -->
       <h5 class="mt-5">Change Password</h5>

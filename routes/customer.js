@@ -21,8 +21,10 @@ router.get('/account', roleCheck.checkCustomer, async (req, res) => {
         const transactions = [];
         for (const account of accounts) {
             const [rawTransactions] = await db.con.promise().query('CALL fetch_recent_transactions(?)', [account.account_id]);
-            console.log('DEBUG: First Result Set of Transactions:', rawTransactions[0]); // Debugging: Log raw transaction data
-
+            
+            // Debugging: Log transactions fetched for each account
+            console.log(`DEBUG: Transactions for account ${account.account_id}:`, rawTransactions[0]);
+        
             transactions.push({
                 accountType: account.account_type,
                 transactions: rawTransactions[0].filter(txn => txn.timestamp && txn.amount), // Filter valid transactions
@@ -46,7 +48,6 @@ router.post('/transfer', roleCheck.checkCustomer, async (req, res) => {
     const { from_account_id, to_account_id, amount, memo } = req.body;
 
     try {
-        // Validate inputs
         if (!from_account_id || !to_account_id || isNaN(Number(amount)) || Number(amount) <= 0) {
             throw new Error('Invalid transfer input. Please select valid accounts and enter a positive amount.');
         }
@@ -54,7 +55,6 @@ router.post('/transfer', roleCheck.checkCustomer, async (req, res) => {
             throw new Error('Cannot transfer funds between the same account.');
         }
 
-        // Perform the transfer
         await db.con.promise().query('CALL transfer_funds(?, ?, ?, ?, @result)', [
             from_account_id, to_account_id, amount, memo || 'Transfer',
         ]);
@@ -64,35 +64,47 @@ router.post('/transfer', roleCheck.checkCustomer, async (req, res) => {
             throw new Error('Error processing transfer.');
         }
 
-        // Success message
+        // Fetch updated account balances and transactions
+        const user = req.session.user;
+        const [updatedAccounts] = await db.con.promise().query('CALL get_user_account_balances(?)', [user.user_id]);
+        const accounts = updatedAccounts[0].map(account => ({
+            ...account,
+            balance: parseFloat(account.balance),
+        })).filter(account => account && account.account_type);
+
+        const transactions = [];
+        for (const account of accounts) {
+            const [rawTransactions] = await db.con.promise().query('CALL fetch_recent_transactions(?)', [account.account_id]);
+            transactions.push({
+                accountType: account.account_type,
+                transactions: rawTransactions[0].filter(txn => txn.timestamp && txn.amount),
+            });
+        }
+
         res.render('customerAccount', {
-            accounts: req.session.accounts, // Replace with actual accounts fetched
-            transactions: req.session.transactions, // Replace with actual transactions fetched
+            accounts,
+            transactions,
             message: 'Your transfer was successful!',
         });
     } catch (error) {
         console.error('Error during transfer:', error.message);
-
-        // Error message
         res.render('customerAccount', {
-            accounts: req.session.accounts || [],
-            transactions: req.session.transactions || [],
+            accounts: [],
+            transactions: [],
             message: 'Unable to process transfer. Please try again.',
         });
     }
 });
 
-/// **Deposit Funds**
+// **Deposit Funds**
 router.post('/deposit', roleCheck.checkCustomer, async (req, res) => {
     const { account_id, amount, memo } = req.body;
 
     try {
-        // Validate inputs
         if (!account_id || isNaN(Number(amount)) || Number(amount) <= 0) {
             throw new Error('Invalid deposit input. Please select an account and enter a positive amount.');
         }
 
-        // Auto-populate memo if not provided
         const user = req.session.user;
         const finalMemo = memo && memo.trim() !== ''
             ? memo
@@ -103,65 +115,88 @@ router.post('/deposit', roleCheck.checkCustomer, async (req, res) => {
             null, account_id, amount, finalMemo,
         ]);
 
-        // Success message
+        // Fetch updated account balances and transactions
+        const [updatedAccounts] = await db.con.promise().query('CALL get_user_account_balances(?)', [user.user_id]);
+        const accounts = updatedAccounts[0].map(account => ({
+            ...account,
+            balance: parseFloat(account.balance),
+        })).filter(account => account && account.account_type);
+
+        const transactions = [];
+        for (const account of accounts) {
+            const [rawTransactions] = await db.con.promise().query('CALL fetch_recent_transactions(?)', [account.account_id]);
+            transactions.push({
+                accountType: account.account_type,
+                transactions: rawTransactions[0].filter(txn => txn.timestamp && txn.amount),
+            });
+        }
+
         res.render('customerAccount', {
-            accounts: req.session.accounts, // Replace with actual accounts fetched
-            transactions: req.session.transactions, // Replace with actual transactions fetched
+            accounts,
+            transactions,
             message: 'Your deposit was successful!',
         });
     } catch (error) {
         console.error('Error processing deposit:', error.message);
-
-        // Error message
         res.render('customerAccount', {
-            accounts: req.session.accounts || [], // Ensure accounts are still passed
-            transactions: req.session.transactions || [], // Ensure transactions are still passed
+            accounts: [],
+            transactions: [],
             message: 'Unable to process deposit. Please try again.',
         });
     }
 });
 
-
-
-
 // **Withdraw Funds**
 router.post('/withdraw', roleCheck.checkCustomer, async (req, res) => {
-    const { account_id, amount } = req.body;
+    const { account_id, amount, memo } = req.body;
 
     try {
-        // Validate inputs
         if (!account_id || isNaN(Number(amount)) || Number(amount) <= 0) {
             throw new Error('Invalid withdrawal input. Please select an account and enter a positive amount.');
         }
 
-        // Check sufficient funds
         const [rows] = await db.con.promise().query('SELECT balance FROM bank_accounts WHERE account_id = ?', [account_id]);
         if (!rows.length || rows[0].balance < amount) {
             throw new Error('Insufficient funds for withdrawal.');
         }
 
-        // Perform the withdrawal
+        // Use provided memo or fallback message
+        const user = req.session.user;
+        const finalMemo = memo && memo.trim() !== '' 
+            ? memo 
+            : `${user.username} did not provide a memo for this transaction.`;
+
         await db.con.promise().query('CALL add_transaction(?, ?, ?, ?)', [
-            null, account_id, -amount, 'Withdrawal',
+            null, account_id, -amount, finalMemo,
         ]);
 
-        // Success message
+        // Fetch updated balances and transactions (similar to deposit logic)
+        const [updatedAccounts] = await db.con.promise().query('CALL get_user_account_balances(?)', [user.user_id]);
+        const accounts = updatedAccounts[0].map(account => ({
+            ...account,
+            balance: parseFloat(account.balance),
+        })).filter(account => account && account.account_type);
+
+        const transactions = [];
+        for (const account of accounts) {
+            const [rawTransactions] = await db.con.promise().query('CALL fetch_recent_transactions(?)', [account.account_id]);
+            transactions.push({
+                accountType: account.account_type,
+                transactions: rawTransactions[0].filter(txn => txn.timestamp && txn.amount),
+            });
+        }
+
         res.render('customerAccount', {
-            accounts: req.session.accounts, // Replace with actual accounts fetched
-            transactions: req.session.transactions, // Replace with actual transactions fetched
+            accounts,
+            transactions,
             message: 'Your withdrawal was successful!',
         });
     } catch (error) {
         console.error('Error processing withdrawal:', error.message);
-
-        // Error message
-        res.render('customerAccount', {
-            accounts: req.session.accounts || [],
-            transactions: req.session.transactions || [],
-            message: 'Unable to process withdrawal. Please try again.',
-        });
+        res.redirect('/customer/account?error=Insufficient funds or invalid withdrawal request.');
     }
 });
+
 
 // **Change Password**
 router.post('/change-password', roleCheck.checkCustomer, async (req, res) => {
