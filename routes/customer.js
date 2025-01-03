@@ -71,7 +71,7 @@ router.post('/transfer', roleCheck.checkCustomer, async (req, res) => {
     }
 });
 
-// **Deposit Funds**
+/// **Deposit Funds**
 router.post('/deposit', roleCheck.checkCustomer, async (req, res) => {
     const { account_id, amount, memo } = req.body;
 
@@ -88,16 +88,20 @@ router.post('/deposit', roleCheck.checkCustomer, async (req, res) => {
             : `${user.username} chose not to provide a memo for this transaction.`;
 
         // Perform the deposit
-        await db.con.promise().query('CALL add_transaction(?, ?, ?, ?)', [
-            account_id, null, amount, finalMemo,
+        await db.con.promise().query('CALL add_transaction(NULL, ?, ?, ?)', [
+            account_id, amount, finalMemo,
         ]);
 
+        // Confirmation message
+        req.flash('success', `Deposit of $${amount} to account ${account_id} was successful!`);
         res.redirect('/customer/account');
     } catch (error) {
         console.error('Error processing deposit:', error.message);
-        res.render('error', { message: 'Unable to process deposit.', error });
+        req.flash('error', 'Unable to process deposit. Please try again.');
+        res.redirect('/customer/account');
     }
 });
+
 
 
 // **Withdraw Funds**
