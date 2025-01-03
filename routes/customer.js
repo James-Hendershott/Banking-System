@@ -17,10 +17,9 @@ router.get('/account', roleCheck.checkCustomer, async (req, res) => {
             balance: parseFloat(account.balance), // Convert balance to a number
         })).filter(account => account && account.account_type); // Filter valid accounts
 
-        // Render the customer account page with balances and transactions
+        // Render the customer account page with balances
         res.render('customerAccount', {
             accounts,
-            transactions,
             message: accounts.length === 0 ? 'No accounts found.' : '',
         });
     } catch (error) {
@@ -50,7 +49,7 @@ router.post('/transfer', roleCheck.checkCustomer, async (req, res) => {
             throw new Error('Error processing transfer.');
         }
 
-        // Fetch updated account balances and transactions
+        // Fetch updated account balances
         const user = req.session.user;
         const [updatedAccounts] = await db.con.promise().query('CALL get_user_account_balances(?)', [user.user_id]);
         const accounts = updatedAccounts[0].map(account => ({
@@ -60,14 +59,12 @@ router.post('/transfer', roleCheck.checkCustomer, async (req, res) => {
 
         res.render('customerAccount', {
             accounts,
-            transactions,
             message: 'Your transfer was successful!',
         });
     } catch (error) {
         console.error('Error during transfer:', error.message);
         res.render('customerAccount', {
             accounts: [],
-            transactions: [],
             message: 'Unable to process transfer. Please try again.',
         });
     }
@@ -92,7 +89,7 @@ router.post('/deposit', roleCheck.checkCustomer, async (req, res) => {
             null, account_id, amount, finalMemo,
         ]);
 
-        // Fetch updated account balances and transactions
+        // Fetch updated account balances
         const [updatedAccounts] = await db.con.promise().query('CALL get_user_account_balances(?)', [user.user_id]);
         const accounts = updatedAccounts[0].map(account => ({
             ...account,
@@ -101,14 +98,12 @@ router.post('/deposit', roleCheck.checkCustomer, async (req, res) => {
 
         res.render('customerAccount', {
             accounts,
-            transactions,
             message: 'Your deposit was successful!',
         });
     } catch (error) {
         console.error('Error processing deposit:', error.message);
         res.render('customerAccount', {
             accounts: [],
-            transactions: [],
             message: 'Unable to process deposit. Please try again.',
         });
     }
@@ -138,7 +133,7 @@ router.post('/withdraw', roleCheck.checkCustomer, async (req, res) => {
             null, account_id, -amount, finalMemo,
         ]);
 
-        // Fetch updated balances and transactions (similar to deposit logic)
+        // Fetch updated balances (similar to deposit logic)
         const [updatedAccounts] = await db.con.promise().query('CALL get_user_account_balances(?)', [user.user_id]);
         const accounts = updatedAccounts[0].map(account => ({
             ...account,
@@ -147,7 +142,6 @@ router.post('/withdraw', roleCheck.checkCustomer, async (req, res) => {
 
         res.render('customerAccount', {
             accounts,
-            transactions,
             message: 'Your withdrawal was successful!',
         });
     } catch (error) {
