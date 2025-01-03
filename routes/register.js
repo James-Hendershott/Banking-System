@@ -1,71 +1,90 @@
 const express = require('express');
 const router = express.Router();
-const crypto = require('crypto'); // Used for hashing and generating salts
-const db = require('../lib/database'); // Database operations module
+const crypto = require('crypto'); // For hashing and salt generation
+const db = require('../lib/database'); // Database module
 
-// **Generate a unique username**
-// Creates a 6-digit random number prefixed with "user"
+// **Generate a Unique Username**
+// Create a random 6-digit numeric suffix for the username
 function generateUsername() {
-    return 'user' + Math.floor(Math.random() * 900000 + 100000);
+    return 'user' + Math.floor(Math.random() * 900000 + 100000); // 6-digit random number
 }
 
-// **Render the registration page**
+// **Render Registration Page**
+// Display the registration form when the registration page is accessed
 router.get('/', (req, res) => {
-    res.render('register'); // Serves the registration form
+    res.render('register'); // Render the registration form
 });
 
-// **Handle registration form submission**
+// **Handle Registration Submission**
+// Process form data and register a new user
 router.post('/', async (req, res) => {
     const { firstName, lastName, email, password, confirmPassword } = req.body;
 
-    // **Validation: Check if all fields are provided**
+    // **Validation Checks**
+    // Ensure all fields are provided
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
         return res.render('register', { error: 'All fields are required.' });
     }
 
-    // **Validation: Check for a valid email format**
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        return res.render('register', { error: 'Invalid email format.' });
-    }
-
-    // **Validation: Ensure passwords match**
+    // Ensure passwords match
     if (password !== confirmPassword) {
         return res.render('register', { error: 'Passwords do not match.' });
     }
 
     try {
-        // **Generate a unique username**
+        // **Generate Username**
         const username = generateUsername();
 
-        // **Generate salt and hash password**
-        const salt = crypto.randomBytes(16).toString('hex');
-        const hashedPassword = crypto.createHash('sha256').update(salt + password).digest('hex');
+        // **Generate Salt and Hash Password**
+        const salt = crypto.randomBytes(16).toString('hex'); // Create a 16-byte salt
+        const hashedPassword = crypto.createHash('sha256').update(salt + password).digest('hex'); // Hash password with salt
 
-        // **Store user in the database using the `register_user` stored procedure**
+        // **Register User in Database**
         await db.con.promise().query(`CALL register_user(?, ?, ?, ?, ?, ?, @result)`, [
-            username, // Generated unique username
-            hashedPassword, // Hashed password
-            salt, // Generated salt
-            firstName, // User's first name
-            lastName, // User's last name
-            email, // User's email
+            username,
+            hashedPassword,
+            salt,
+            firstName,
+            lastName,
+            email,
         ]);
 
-        // **Check the result of the stored procedure**
+        // **Check Registration Result**
         const [result] = await db.con.promise().query('SELECT @result AS result');
         if (result[0].result !== 0) {
             return res.render('register', { error: 'Registration failed. User may already exist.' });
         }
 
-        // **Render the success page**
-        res.render('registerSuccess', {
-            firstName, // Pass first name to the success view
-            uniqueID: username, // Pass the generated username
-        });
+        // **Retrieve New User ID**
+        const [userIdResult] = await db.con.promise().query(
+            'SELECT user_id FROM users WHERE username = ? LIMIT 1',
+            [username]
+        );
+
+        const userId = userIdResult[0]?.user_id; // Extract user ID
+        if (!userId) {
+            throw new Error('Failed to retrieve new user ID.');
+        }
+
+        // **Add Default Bank Accounts**
+        const defaultAccounts = [
+            { accountType: 'Checking', balance: 0 }, // $0 Checking account
+            { accountType: 'Savings', balance: 0 },  // $0 Savings account
+        ];
+
+        for (const account of defaultAccounts) {
+            await db.con.promise().query(
+                `CALL add_bank_account(?, ?, ?)`,
+                [userId, account.accountType, account.balance]
+            );
+        }
+
+        // **Render Success Page**
+        res.render('registerSuccess', { firstName, uniqueID: username });
     } catch (error) {
-        console.error('Error during registration:', error);
-        res.render('register', { error: 'An error occurred during registration. Please try again.' });
+        // **Error Handling**
+        console.error('Error during registration:', error); // Log the error for debugging
+        res.render('register', { error: 'An error occurred during registration. Please try again.' }); // Inform the user
     }
 });
 
