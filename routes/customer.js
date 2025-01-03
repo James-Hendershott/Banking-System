@@ -41,63 +41,6 @@ router.get('/account', roleCheck.checkCustomer, async (req, res) => {
     }
 });
 
-// **Deposit Funds**
-router.post('/deposit', roleCheck.checkCustomer, async (req, res) => {
-    const { account_id, amount, deposit_type, validation } = req.body;
-
-    try {
-        // Validate inputs
-        if (!account_id || isNaN(Number(amount)) || Number(amount) <= 0) {
-            throw new Error('Invalid deposit input. Please select an account and enter a positive amount.');
-        }
-        if (deposit_type === 'Check' && !validation) {
-            throw new Error('Please provide a check number for check deposits.');
-        }
-        if (deposit_type === 'Wire Transfer' && !validation) {
-            throw new Error('Please provide a wire transfer reference.');
-        }
-
-        // Perform the deposit
-        const memo = `Deposit (${deposit_type}${validation ? `: ${validation}` : ''})`;
-        await db.con.promise().query('CALL add_transaction(?, ?, ?, ?)', [
-            account_id, null, amount, memo,
-        ]);
-
-        res.redirect('/customer/account');
-    } catch (error) {
-        console.error('Error processing deposit:', error.message);
-        res.render('error', { message: 'Unable to process deposit.', error });
-    }
-});
-
-// **Withdraw Funds**
-router.post('/withdraw', roleCheck.checkCustomer, async (req, res) => {
-    const { account_id, amount } = req.body;
-
-    try {
-        // Validate inputs
-        if (!account_id || isNaN(Number(amount)) || Number(amount) <= 0) {
-            throw new Error('Invalid withdrawal input. Please select an account and enter a positive amount.');
-        }
-
-        // Check sufficient funds
-        const [rows] = await db.con.promise().query('SELECT balance FROM bank_accounts WHERE account_id = ?', [account_id]);
-        if (!rows.length || rows[0].balance < amount) {
-            throw new Error('Insufficient funds for withdrawal.');
-        }
-
-        // Perform the withdrawal
-        await db.con.promise().query('CALL add_transaction(?, ?, ?, ?)', [
-            null, account_id, -amount, 'Withdrawal',
-        ]);
-
-        res.redirect('/customer/account');
-    } catch (error) {
-        console.error('Error processing withdrawal:', error.message);
-        res.render('error', { message: 'Unable to process withdrawal.', error });
-    }
-});
-
 // **Transfer Funds**
 router.post('/transfer', roleCheck.checkCustomer, async (req, res) => {
     const { from_account_id, to_account_id, amount, memo } = req.body;
@@ -125,6 +68,63 @@ router.post('/transfer', roleCheck.checkCustomer, async (req, res) => {
     } catch (error) {
         console.error('Error during transfer:', error.message);
         res.render('error', { message: 'Unable to process transfer.', error });
+    }
+});
+
+// **Deposit Funds**
+router.post('/deposit', roleCheck.checkCustomer, async (req, res) => {
+    const { account_id, amount, memo } = req.body;
+
+    try {
+        // Validate inputs
+        if (!account_id || isNaN(Number(amount)) || Number(amount) <= 0) {
+            throw new Error('Invalid deposit input. Please select an account and enter a positive amount.');
+        }
+
+        // Auto-populate memo if not provided
+        const user = req.session.user;
+        const finalMemo = memo && memo.trim() !== '' 
+            ? memo 
+            : `${user.username} chose not to provide a memo for this transaction.`;
+
+        // Perform the deposit
+        await db.con.promise().query('CALL add_transaction(?, ?, ?, ?)', [
+            account_id, null, amount, finalMemo,
+        ]);
+
+        res.redirect('/customer/account');
+    } catch (error) {
+        console.error('Error processing deposit:', error.message);
+        res.render('error', { message: 'Unable to process deposit.', error });
+    }
+});
+
+
+// **Withdraw Funds**
+router.post('/withdraw', roleCheck.checkCustomer, async (req, res) => {
+    const { account_id, amount } = req.body;
+
+    try {
+        // Validate inputs
+        if (!account_id || isNaN(Number(amount)) || Number(amount) <= 0) {
+            throw new Error('Invalid withdrawal input. Please select an account and enter a positive amount.');
+        }
+
+        // Check sufficient funds
+        const [rows] = await db.con.promise().query('SELECT balance FROM bank_accounts WHERE account_id = ?', [account_id]);
+        if (!rows.length || rows[0].balance < amount) {
+            throw new Error('Insufficient funds for withdrawal.');
+        }
+
+        // Perform the withdrawal
+        await db.con.promise().query('CALL add_transaction(?, ?, ?, ?)', [
+            null, account_id, -amount, 'Withdrawal',
+        ]);
+
+        res.redirect('/customer/account');
+    } catch (error) {
+        console.error('Error processing withdrawal:', error.message);
+        res.render('error', { message: 'Unable to process withdrawal.', error });
     }
 });
 
