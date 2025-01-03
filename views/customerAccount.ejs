@@ -63,14 +63,7 @@
       <!-- Additional Forms: Deposit, Withdraw, Transfer, and Change Password -->
       <h4 class="mt-5">Manage Your Accounts</h4>
       <!-- Transfer Form -->
-        <% if (success) { %>
-          <div class="alert alert-success"><%= success %></div>
-      <% } %>
-      <% if (error) { %>
-          <div class="alert alert-danger"><%= error %></div>
-      <% } %>
-      
-      <h5 class="mt-5"><i class="bi bi-arrow-left-right"></i>Transfer Funds</h5>
+      <h5 class="mt-5">Transfer Funds</h5>
       <form action="/customer/transfer" method="POST" class="mt-3">
         <div class="mb-3">
           <label for="fromAccount" class="form-label">From Account</label>
@@ -102,14 +95,7 @@
       </form>
 
       <!-- Deposit Form -->
-      <h5 class="mt-5"><i class="bi bi-piggy-bank"></i>Deposit Funds</h5>
-        <% if (success) { %>
-          <div class="alert alert-success"><%= success %></div>
-      <% } %>
-      <% if (error) { %>
-          <div class="alert alert-danger"><%= error %></div>
-      <% } %>
-   
+      <h5 class="mt-5">Deposit Funds</h5>
       <form action="/customer/deposit" method="POST" class="mt-3">
         <div class="mb-3">
           <label for="depositAccount" class="form-label">Deposit Account</label>
@@ -132,14 +118,7 @@
       </form>
 
       <!-- Withdraw Form -->
-        <% if (success) { %>
-          <div class="alert alert-success"><%= success %></div>
-      <% } %>
-      <% if (error) { %>
-          <div class="alert alert-danger"><%= error %></div>
-      <% } %>
-    
-      <h5 class="mt-5"><i class="bi bi-cash-stack"></i>Withdraw Funds</h5>
+      <h5 class="mt-5">Withdraw Funds</h5>
       <form action="/customer/withdraw" method="POST" class="mt-3">
         <div class="mb-3">
           <label for="withdrawAccount" class="form-label">Withdraw Account</label>
@@ -158,14 +137,7 @@
       </form>
 
       <!-- Change Password Form -->
-      <% if (success) { %>
-          <div class="alert alert-success"><%= success %></div>
-      <% } %>
-      <% if (error) { %>
-          <div class="alert alert-danger"><%= error %></div>
-      <% } %>
-    
-      <h5 class="mt-5"><i class="bi bi-key"></i>Change Password</h5>
+      <h5 class="mt-5">Change Password</h5>
       <form action="/customer/change-password" method="POST" class="mt-3">
         <div class="mb-3">
           <label for="currentPassword" class="form-label">Current Password</label>
@@ -178,5 +150,50 @@
         <button type="submit" class="btn btn-primary w-100">Change Password</button>
       </form>
     </div>
+
+    <!-- Message Modal -->
+    <div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="messageModalLabel">Notification</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" id="messageModalBody">
+            <!-- Message content will go here -->
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Script to Handle Modal Messages -->
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        const success = params.get('success');
+        const error = params.get('error');
+
+        if (success || error) {
+          const modalBody = document.getElementById('messageModalBody');
+          const modalLabel = document.getElementById('messageModalLabel');
+
+          if (success) {
+            modalLabel.textContent = 'Success';
+            modalBody.textContent = success;
+            modalBody.className = 'text-success';
+          } else if (error) {
+            modalLabel.textContent = 'Error';
+            modalBody.textContent = error;
+            modalBody.className = 'text-danger';
+          }
+
+          const messageModal = new bootstrap.Modal(document.getElementById('messageModal'));
+          messageModal.show();
+        }
+      });
+    </script>
   </body>
 </html>
