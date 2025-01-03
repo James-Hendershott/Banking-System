@@ -17,20 +17,6 @@ router.get('/account', roleCheck.checkCustomer, async (req, res) => {
             balance: parseFloat(account.balance), // Convert balance to a number
         })).filter(account => account && account.account_type); // Filter valid accounts
 
-        // Fetch recent transactions
-        const transactions = [];
-        for (const account of accounts) {
-            const [rawTransactions] = await db.con.promise().query('CALL fetch_recent_transactions(?)', [account.account_id]);
-            
-            // Debugging: Log transactions fetched for each account
-            console.log(`DEBUG: Transactions for account ${account.account_id}:`, rawTransactions[0]);
-        
-            transactions.push({
-                accountType: account.account_type,
-                transactions: rawTransactions[0].filter(txn => txn.timestamp && txn.amount), // Filter valid transactions
-            });
-        }
-
         // Render the customer account page with balances and transactions
         res.render('customerAccount', {
             accounts,
