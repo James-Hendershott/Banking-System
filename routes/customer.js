@@ -112,22 +112,28 @@ router.post('/withdraw', roleCheck.checkCustomer, async (req, res) => {
             throw new Error('Invalid withdrawal input. Please select an account and enter a positive amount.');
         }
 
+        // Fetch the account balance
         const [rows] = await db.con.promise().query('SELECT balance FROM bank_accounts WHERE account_id = ?', [account_id]);
-        if (!rows.length || rows[0].balance < amount) {
+        if (!rows.length) {
+            throw new Error('Account not found.');
+        }
+
+        const currentBalance = parseFloat(rows[0].balance);
+        if (currentBalance < amount) {
             throw new Error('Insufficient funds for withdrawal.');
         }
 
-        // Use provided memo or fallback message
         const user = req.session.user;
         const finalMemo = memo && memo.trim() !== '' 
             ? memo 
             : `${user.username} did not provide a memo for this transaction.`;
 
+        // Perform the withdrawal
         await db.con.promise().query('CALL add_transaction(?, ?, ?, ?)', [
-            null, account_id, -amount, finalMemo,
+            account_id, null, -amount, finalMemo,
         ]);
 
-        // Fetch updated balances (similar to deposit logic)
+        // Fetch updated account balances
         const [updatedAccounts] = await db.con.promise().query('CALL get_user_account_balances(?)', [user.user_id]);
         const accounts = updatedAccounts[0].map(account => ({
             ...account,
