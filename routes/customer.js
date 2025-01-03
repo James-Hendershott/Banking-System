@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const db = require('../lib/database'); // Database connection
 const roleCheck = require('../middleware/roleCheck'); // Middleware for role checking
+const crypto = require('crypto');
+
 
 // **Customer Account Landing Page**
 router.get('/account', roleCheck.checkCustomer, async (req, res) => {
@@ -104,49 +106,52 @@ router.post('/deposit', roleCheck.checkCustomer, async (req, res) => {
 });
 
 // **Withdraw Funds**
-router.post('/withdraw', roleCheck.checkCustomer, async (req, res) => {
-    const { account_id, amount, memo } = req.body;
+router.post('/change-password', roleCheck.checkCustomer, async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
 
     try {
-        if (!account_id || isNaN(Number(amount)) || Number(amount) <= 0) {
-            throw new Error('Invalid withdrawal input. Please select an account and enter a positive amount.');
+        if (!currentPassword || !newPassword) {
+            throw new Error('Both current and new passwords are required.');
         }
 
-        // Fetch the account balance
-        const [rows] = await db.con.promise().query('SELECT balance FROM bank_accounts WHERE account_id = ?', [account_id]);
-        if (!rows.length) {
-            throw new Error('Account not found.');
+        const username = req.session.user.username; // Fetch username from session
+        console.log(`DEBUG: Username from session: ${username}`);
+
+        // Fetch the salt and hashed password for the current user
+        const [userResults] = await db.con.promise().query('CALL get_salt(?)', [username]);
+        console.log('DEBUG: Raw Salt Results:', userResults);
+
+        if (!userResults || userResults.length === 0 || !userResults[0]?.salt) {
+            throw new Error('Unable to fetch user details for password change.');
         }
 
-        const currentBalance = parseFloat(rows[0].balance);
-        if (currentBalance < amount) {
-            throw new Error('Insufficient funds for withdrawal.');
+        const salt = userResults[0].salt;
+        const storedHashedPassword = userResults[0].hashed_password;
+
+        console.log(`DEBUG: Fetched Salt: ${salt}, Stored Hash: ${storedHashedPassword}`);
+
+        // Hash the input current password and compare it with the stored hash
+        const hashedInputPassword = crypto.createHash('sha256').update(salt + currentPassword).digest('hex');
+        console.log(`DEBUG: Hashed Input Password: ${hashedInputPassword}`);
+
+        if (hashedInputPassword !== storedHashedPassword) {
+            throw new Error('Incorrect current password.');
         }
 
-        const user = req.session.user;
-        const finalMemo = memo && memo.trim() !== '' 
-            ? memo 
-            : `${user.username} did not provide a memo for this transaction.`;
+        // Hash the new password
+        const newSalt = crypto.randomBytes(16).toString('hex');
+        const hashedNewPassword = crypto.createHash('sha256').update(newSalt + newPassword).digest('hex');
 
-        // Perform the withdrawal
-        await db.con.promise().query('CALL add_transaction(?, ?, ?, ?)', [
-            account_id, null, -amount, finalMemo,
-        ]);
+        // Update the password in the database
+        await db.con.promise().query(
+            'UPDATE users SET hashed_password = ?, salt = ? WHERE username = ?',
+            [hashedNewPassword, newSalt, username]
+        );
 
-        // Fetch updated account balances
-        const [updatedAccounts] = await db.con.promise().query('CALL get_user_account_balances(?)', [user.user_id]);
-        const accounts = updatedAccounts[0].map(account => ({
-            ...account,
-            balance: parseFloat(account.balance),
-        })).filter(account => account && account.account_type);
-
-        res.render('customerAccount', {
-            accounts,
-            message: 'Your withdrawal was successful!',
-        });
+        res.redirect('/customer/account?success=Password changed successfully!');
     } catch (error) {
-        console.error('Error processing withdrawal:', error.message);
-        res.redirect('/customer/account?error=Insufficient funds or invalid withdrawal request.');
+        console.error('Error changing password:', error.message);
+        res.redirect('/customer/account?error=Unable to change password. Please try again.');
     }
 });
 
@@ -156,40 +161,52 @@ router.post('/change-password', roleCheck.checkCustomer, async (req, res) => {
     const { currentPassword, newPassword } = req.body;
 
     try {
-        // Validate inputs
         if (!currentPassword || !newPassword) {
             throw new Error('Both current and new passwords are required.');
         }
 
-        const userId = req.session.user.user_id;
+        const userId = req.session.user.user_id; // Get user ID from session
+        console.log(`DEBUG: Attempting to change password for user_id: ${userId}`);
 
-        // Fetch the current user's salt and hashed password
+        // Fetch user details via fetch_user_by_id
         const [userResults] = await db.con.promise().query('CALL fetch_user_by_id(?)', [userId]);
-        const user = userResults[0];
-        if (!user) throw new Error('User not found.');
+        console.log('DEBUG: Raw User Results:', userResults);
 
-        const currentSalt = user.salt;
-        const storedHashedPassword = user.hashed_password;
+        // Extract user details
+        const user = userResults[0]?.[0]; // Adjust based on actual structure
+        if (!user || !user.hashed_password || !user.salt) {
+            console.error('DEBUG: Missing user details:', user);
+            throw new Error('Unable to fetch user details for password validation.');
+        }
+
+        // Debug fetched user details
+        const { salt, hashed_password: storedHashedPassword } = user;
+        console.log(`DEBUG: Salt: ${salt}, Stored Hash: ${storedHashedPassword}`);
 
         // Validate current password
-        const hashedInputPassword = crypto.createHash('sha256').update(currentSalt + currentPassword).digest('hex');
+        const hashedInputPassword = crypto.createHash('sha256').update(salt + currentPassword).digest('hex');
+        console.log(`DEBUG: Hashed Input Password: ${hashedInputPassword}`);
+
         if (hashedInputPassword !== storedHashedPassword) {
             throw new Error('Incorrect current password.');
         }
 
-        // Update with new password
+        // Generate new salt and hash the new password
         const newSalt = crypto.randomBytes(16).toString('hex');
         const hashedNewPassword = crypto.createHash('sha256').update(newSalt + newPassword).digest('hex');
+        console.log(`DEBUG: New Salt: ${newSalt}, Hashed New Password: ${hashedNewPassword}`);
+
+        // Update the database with the new password and salt
         await db.con.promise().query(
             'UPDATE users SET hashed_password = ?, salt = ? WHERE user_id = ?',
             [hashedNewPassword, newSalt, userId]
         );
 
-        res.redirect('/customer/account');
+        console.log(`DEBUG: Password updated successfully for user_id: ${userId}`);
+        res.redirect('/customer/account?success=Password changed successfully!');
     } catch (error) {
         console.error('Error changing password:', error.message);
-        res.render('error', { message: 'Unable to change password.', error });
+        res.redirect('/customer/account?error=Unable to change password. Please try again.');
     }
 });
-
 module.exports = router;
