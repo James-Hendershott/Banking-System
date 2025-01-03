@@ -37,12 +37,16 @@
         <% if (transactions && transactions.length > 0) { %>
           <% transactions.forEach(transaction => { %>
             <li class="list-group-item">
-              <strong><%= transaction.accountType %>:</strong>
-              <% transaction.transactions.forEach(txn => { %>
-                <p>
-                  <%= txn.timestamp %> - $<%= txn.amount || 0 %> - <%= txn.memo || 'No Memo' %>
-                </p>
-              <% }); %>
+              <strong><%= transaction.accountType || 'Unknown Account' %>:</strong>
+              <% if (transaction.transactions && transaction.transactions.length > 0) { %>
+                <% transaction.transactions.forEach(txn => { %>
+                  <p>
+                    <%= txn.timestamp || 'Unknown Date' %> - $<%= txn.amount || 0 %> - <%= txn.memo || 'No Memo' %>
+                  </p>
+                <% }); %>
+              <% } else { %>
+                <p>No transactions available for this account.</p>
+              <% } %>
             </li>
           <% }); %>
         <% } else { %>
@@ -59,7 +63,9 @@
           <select name="account_id" id="depositAccount" class="form-select" required>
             <option value="" disabled selected>Select an account</option>
             <% accounts.forEach(account => { %>
-              <option value="<%= account.account_id %>"><%= account.account_type %> ($<%= account.balance %>)</option>
+              <% if (account && account.account_id) { %>
+                <option value="<%= account.account_id %>"><%= account.account_type || 'Unknown' %> ($<%= account.balance || 0 %>)</option>
+              <% } %>
             <% }); %>
           </select>
         </div>
@@ -68,37 +74,6 @@
           <input type="number" name="amount" id="depositAmount" class="form-control" min="0.01" step="0.01" required />
         </div>
         <button type="submit" class="btn btn-success w-100">Deposit Funds</button>
-      </form>
-
-      <form action="/customer/withdraw" method="POST" class="mt-3">
-        <!-- Withdraw Form -->
-        <div class="mb-3">
-          <label for="withdrawAccount" class="form-label">Withdraw Account</label>
-          <select name="account_id" id="withdrawAccount" class="form-select" required>
-            <option value="" disabled selected>Select an account</option>
-            <% accounts.forEach(account => { %>
-              <option value="<%= account.account_id %>"><%= account.account_type %> ($<%= account.balance %>)</option>
-            <% }); %>
-          </select>
-        </div>
-        <div class="mb-3">
-          <label for="withdrawAmount" class="form-label">Amount</label>
-          <input type="number" name="amount" id="withdrawAmount" class="form-control" min="0.01" step="0.01" required />
-        </div>
-        <button type="submit" class="btn btn-danger w-100">Withdraw Funds</button>
-      </form>
-
-      <form action="/customer/change-password" method="POST" class="mt-3">
-        <!-- Change Password Form -->
-        <div class="mb-3">
-          <label for="currentPassword" class="form-label">Current Password</label>
-          <input type="password" name="currentPassword" id="currentPassword" class="form-control" required />
-        </div>
-        <div class="mb-3">
-          <label for="newPassword" class="form-label">New Password</label>
-          <input type="password" name="newPassword" id="newPassword" class="form-control" required />
-        </div>
-        <button type="submit" class="btn btn-primary w-100">Change Password</button>
       </form>
     </div>
   </body>
