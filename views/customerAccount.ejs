@@ -18,11 +18,15 @@
       <div class="card mt-4">
         <div class="card-body">
           <% accounts.forEach(account => { %>
-            <h5>
-              <a href="/customer/account/<%= account.account_type.toLowerCase() %>" class="text-decoration-none">
-                <%= account.account_type %> Account Balance: $<%= account.balance.toFixed(2) %>
-              </a>
-            </h5>
+            <% if (account && account.account_type) { %> <!-- Safeguard -->
+              <h5>
+                <a href="/customer/account/<%= account.account_type.toLowerCase() %>" class="text-decoration-none">
+                  <%= account.account_type %> Account Balance: $<%= (account.balance || 0).toFixed(2) %>
+                </a>
+              </h5>
+            <% } else { %>
+              <p class="text-danger">Account information is missing or invalid.</p>
+            <% } %>
           <% }); %>
         </div>
       </div>
@@ -36,7 +40,7 @@
               <strong><%= transaction.accountType %>:</strong>
               <% transaction.transactions.forEach(txn => { %>
                 <p>
-                  <%= txn.timestamp %> - $<%= txn.amount %> - <%= txn.memo || 'No Memo' %>
+                  <%= txn.timestamp %> - $<%= txn.amount || 0 %> - <%= txn.memo || 'No Memo' %>
                 </p>
               <% }); %>
             </li>
@@ -45,7 +49,7 @@
           <li class="list-group-item">No recent transactions available.</li>
         <% } %>
       </ul>
-
+      
       <!-- Additional Forms: Deposit, Withdraw, and Change Password -->
       <h4 class="mt-5">Manage Your Accounts</h4>
       <form action="/customer/deposit" method="POST" class="mt-3">
