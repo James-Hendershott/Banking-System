@@ -58,15 +58,6 @@ router.post('/transfer', roleCheck.checkCustomer, async (req, res) => {
             balance: parseFloat(account.balance),
         })).filter(account => account && account.account_type);
 
-        const transactions = [];
-        for (const account of accounts) {
-            const [rawTransactions] = await db.con.promise().query('CALL fetch_recent_transactions(?)', [account.account_id]);
-            transactions.push({
-                accountType: account.account_type,
-                transactions: rawTransactions[0].filter(txn => txn.timestamp && txn.amount),
-            });
-        }
-
         res.render('customerAccount', {
             accounts,
             transactions,
@@ -107,15 +98,6 @@ router.post('/deposit', roleCheck.checkCustomer, async (req, res) => {
             ...account,
             balance: parseFloat(account.balance),
         })).filter(account => account && account.account_type);
-
-        const transactions = [];
-        for (const account of accounts) {
-            const [rawTransactions] = await db.con.promise().query('CALL fetch_recent_transactions(?)', [account.account_id]);
-            transactions.push({
-                accountType: account.account_type,
-                transactions: rawTransactions[0].filter(txn => txn.timestamp && txn.amount),
-            });
-        }
 
         res.render('customerAccount', {
             accounts,
@@ -162,15 +144,6 @@ router.post('/withdraw', roleCheck.checkCustomer, async (req, res) => {
             ...account,
             balance: parseFloat(account.balance),
         })).filter(account => account && account.account_type);
-
-        const transactions = [];
-        for (const account of accounts) {
-            const [rawTransactions] = await db.con.promise().query('CALL fetch_recent_transactions(?)', [account.account_id]);
-            transactions.push({
-                accountType: account.account_type,
-                transactions: rawTransactions[0].filter(txn => txn.timestamp && txn.amount),
-            });
-        }
 
         res.render('customerAccount', {
             accounts,
