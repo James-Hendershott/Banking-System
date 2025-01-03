@@ -4,102 +4,67 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const session = require('express-session');
-const MySQLStore = require('express-mysql-session')(session); // Import MySQL session store
+const MySQLStore = require('express-mysql-session')(session);
 
-// Adding routes
-const loginRouter = require('./routes/login');
-const transferRouter = require('./routes/transfer');
-const transactionRouter = require('./routes/transaction');
-const registerRouter = require('./routes/register');
-const homeRouter = require('./routes/home');
-const helpRouter = require('./routes/help');
-const forgotPasswordRouter = require('./routes/forgotPassword');
-const adminRouter = require('./routes/admin');
-const employeeRouter = require('./routes/employee');
-const customerRouter = require('./routes/customer');
-const logoutRouter = require('./routes/logout');
+const routes = {
+    login: require('./routes/login'),
+    transfer: require('./routes/transfer'),
+    transaction: require('./routes/transaction'),
+    register: require('./routes/register'),
+    home: require('./routes/home'),
+    help: require('./routes/help'),
+    forgotPassword: require('./routes/forgotPassword'),
+    admin: require('./routes/admin'),
+    employee: require('./routes/employee'),
+    customer: require('./routes/customer'),
+    logout: require('./routes/logout'),
+};
 
-// Import middleware
 const roleCheck = require('./middleware/roleCheck');
-const db = require('./lib/database'); // Database module
-const sessionPool = require('./lib/sessionPool'); // Session pool for session storage
+const db = require('./lib/database');
+const sessionPool = require('./lib/sessionPool');
 
 const app = express();
-// Set the view engine and views directory
-app.set('views', path.join(__dirname, 'views')); // Define the views directory
-app.set('view engine', 'ejs'); // Use EJS as the view engine
 
-// Set up session store
-var sessionStore = new MySQLStore({}, sessionPool);
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
 
-// Session middleware
-app.use(
-    session({
-        key: 'user_session_cookie', // Cookie name
-        secret: process.env.SESSION_SECRET || 'yourSecretKey', // Secure secret
-        store: sessionStore,
-        resave: false, // Do not save session if unmodified
-        saveUninitialized: false, // Do not create empty sessions
-        cookie: {
-            secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-            maxAge: 1000 * 60 * 60 * 24, // 1-day expiration
-        },
-    })
-);
+const sessionConfig = {
+    key: 'user_session_cookie',
+    secret: process.env.SESSION_SECRET || 'yourSecretKey',
+    store: new MySQLStore({}, sessionPool),
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 1000 * 60 * 60 * 24,
+    },
+};
+app.use(session(sessionConfig));
 
-// Initialize the database
-db.initializeDatabase(); // Ensure database is set up and ready
+db.initializeDatabase();
 
-// Logging and parsers
-app.use(logger('dev')); // Use Morgan for logging HTTP requests
-app.use(express.json()); // Parse JSON request bodies
-app.use(express.urlencoded({ extended: false })); // Parse URL-encoded request bodies
-app.use(cookieParser()); // Parse cookies
+app.use(logger('dev'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'node_modules/bootstrap/dist/')));
+app.use(express.static(path.join(__dirname, 'node_modules/bootstrap-icons/font')));
 
-// Static files
-app.use(express.static(path.join(__dirname, 'public'))); // Public directory
-app.use(express.static(path.join(__dirname, 'node_modules/bootstrap/dist/'))); // Bootstrap CSS and JS
-app.use(express.static(path.join(__dirname, 'node_modules/bootstrap-icons/font'))); // Bootstrap icons
-
-// Session data for views
 app.use((req, res, next) => {
-    res.locals.session = req.session; // Make session data available to views
+    res.locals.session = req.session;
     next();
 });
 
-// Public routes
-app.use('/', homeRouter); // Home page
-app.use('/login', loginRouter); // Login functionality
-app.use('/register', registerRouter); // Registration functionality
-app.use('/help', helpRouter); // Help page
-app.use('/forgot-password', forgotPasswordRouter); // Password recovery
-app.use('/logout', logoutRouter); // Logout
-
-// Role-protected routes
-app.use('/transaction', roleCheck.checkCustomer, transactionRouter); // Customer transactions
-app.use('/transfer', roleCheck.checkCustomer, transferRouter); // Customer funds transfer
-app.use('/admin', roleCheck.checkAdmin, adminRouter); // Admin management
-app.use('/employee', roleCheck.checkEmployee, employeeRouter); // Employee actions
-app.use('/customer', roleCheck.checkCustomer, customerRouter); // Customer actions
-app.use(express.urlencoded({ extended: false })); // Parse URL-encoded form data
-
-// Error handling
-// Handle 404 errors (Page Not Found)
-app.use((req, res, next) => {
-    res.status(404).render('error', {
-        message: 'Page Not Found',
-        error: { status: 404 },
-    });
+Object.entries(routes).forEach(([route, handler]) => {
+    app.use(`/${route === 'home' ? '' : route}`, handler);
 });
 
-// General error handler
-app.use((err, req, res, next) => {
-    res.locals.message = err.message;
-    res.locals.error = req.app.get('env') === 'development' ? err : {}; // Show stack trace in dev mode
-    res.status(err.status || 500).render('error', {
-        message: err.message || 'Internal Server Error', // Error message
-        error: err // Pass the error object to the template
-    });
+app.use((req, res) => res.status(404).render('error', { message: 'Page Not Found', error: { status: 404 } }));
+app.use((err, req, res) => {
+    console.error('Error:', err.message);
+    res.status(err.status || 500).render('error', { message: err.message, error: {} });
 });
 
 module.exports = app;
