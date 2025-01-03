@@ -63,10 +63,7 @@ router.post('/transfer', roleCheck.checkCustomer, async (req, res) => {
         });
     } catch (error) {
         console.error('Error during transfer:', error.message);
-        res.render('customerAccount', {
-            accounts: [],
-            message: 'Unable to process transfer. Please try again.',
-        });
+        res.redirect('/customer/account?error=Unable to perform Transfer, please check the information and try again.');
     }
 });
 
@@ -102,10 +99,7 @@ router.post('/deposit', roleCheck.checkCustomer, async (req, res) => {
         });
     } catch (error) {
         console.error('Error processing deposit:', error.message);
-        res.render('customerAccount', {
-            accounts: [],
-            message: 'Unable to process deposit. Please try again.',
-        });
+        res.redirect('/customer/account?error=Unable to perform Deposit, please check the information and try again.');
     }
 });
 
