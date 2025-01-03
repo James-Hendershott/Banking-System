@@ -10,38 +10,38 @@ router.get('/account', roleCheck.checkCustomer, async (req, res) => {
 
         // Fetch account balances
         const [accounts] = await db.con.promise().query('CALL get_user_account_balances(?)', [userId]);
-        console.log('DEBUG: Accounts:', accounts); // Debugging: Log accounts
-
-        if (!accounts.length) {
-            throw new Error('No accounts found for this user.');
+        if (!accounts || accounts.length === 0) {
+            return res.render('customerAccount', {
+                accounts: [],
+                transactions: [],
+                message: 'No accounts found.',
+            });
         }
 
-        // Fetch recent transactions for each account
+        // Fetch recent transactions
         const transactions = [];
         for (const account of accounts) {
             const [recentTransactions] = await db.con.promise().query(
-                'CALL fetch_recent_transactions(?)', 
+                'CALL fetch_recent_transactions(?)',
                 [account.account_id]
             );
-            console.log(`DEBUG: Transactions for account ${account.account_id}:`, recentTransactions); // Debugging: Log transactions
             transactions.push({
                 accountType: account.account_type,
                 transactions: recentTransactions,
             });
         }
 
-        console.log('DEBUG: Transactions Data:', transactions); // Debugging: Log transactions array
-
-        // Render the customer account page with balances and transactions
         res.render('customerAccount', {
             accounts,
             transactions,
+            message: '',
         });
     } catch (error) {
         console.error('Error fetching customer account details:', error.message);
         res.status(500).render('error', { message: 'Unable to load account details.', error });
     }
 });
+
 
 // **Deposit Funds**
 router.post('/deposit', roleCheck.checkCustomer, async (req, res) => {
