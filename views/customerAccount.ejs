@@ -8,17 +8,6 @@
     <link rel="stylesheet" href="/bootstrap-icons.css" />
   </head>
   <body>
-    <!-- Debugging Section -->
-    <pre>
-      <strong>Accounts Data:</strong>
-      <%= JSON.stringify(accounts, null, 2) %>
-    </pre>
-    <pre>
-      <strong>Transactions Data:</strong>
-      <%= JSON.stringify(transactions, null, 2) %>
-    </pre>
-    <!-- End of Debugging Section -->
-
     <!-- Include Navbar -->
     <%- include('partials/navbar') %>
 
@@ -30,7 +19,7 @@
         <div class="card-body">
           <% if (accounts.length > 0) { %>
             <% accounts.forEach(account => { %>
-              <% if (account && account.account_type) { %> <!-- Safeguard -->
+              <% if (account && account.account_type) { %>
                 <h5>
                   <a href="/customer/account/<%= account.account_type.toLowerCase() %>" class="text-decoration-none">
                     <%= account.account_type %> Account Balance: $<%= (account.balance || 0).toFixed(2) %>
@@ -71,10 +60,11 @@
         <% } %>
       </ul>
 
-      <!-- Additional Forms: Deposit, Withdraw, and Change Password -->
+      <!-- Additional Forms: Deposit, Withdraw, Transfer, and Change Password -->
       <h4 class="mt-5">Manage Your Accounts</h4>
+
+      <!-- Deposit Form -->
       <form action="/customer/deposit" method="POST" class="mt-3">
-        <!-- Deposit Form -->
         <div class="mb-3">
           <label for="depositAccount" class="form-label">Deposit Account</label>
           <select name="account_id" id="depositAccount" class="form-select" required>
@@ -91,8 +81,8 @@
         <button type="submit" class="btn btn-success w-100">Deposit Funds</button>
       </form>
 
+      <!-- Withdraw Form -->
       <form action="/customer/withdraw" method="POST" class="mt-3">
-        <!-- Withdraw Form -->
         <div class="mb-3">
           <label for="withdrawAccount" class="form-label">Withdraw Account</label>
           <select name="account_id" id="withdrawAccount" class="form-select" required>
@@ -109,8 +99,39 @@
         <button type="submit" class="btn btn-danger w-100">Withdraw Funds</button>
       </form>
 
+      <!-- Transfer Form -->
+      <form action="/customer/transfer" method="POST" class="mt-3">
+        <div class="mb-3">
+          <label for="fromAccount" class="form-label">From Account</label>
+          <select name="from_account_id" id="fromAccount" class="form-select" required>
+            <option value="" disabled selected>Select an account</option>
+            <% accounts.forEach(account => { %>
+              <option value="<%= account.account_id %>"><%= account.account_type %> ($<%= account.balance %>)</option>
+            <% }); %>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="toAccount" class="form-label">To Account</label>
+          <select name="to_account_id" id="toAccount" class="form-select" required>
+            <option value="" disabled selected>Select an account</option>
+            <% accounts.forEach(account => { %>
+              <option value="<%= account.account_id %>"><%= account.account_type %> ($<%= account.balance %>)</option>
+            <% }); %>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="transferAmount" class="form-label">Amount</label>
+          <input type="number" name="amount" id="transferAmount" class="form-control" min="0.01" step="0.01" required />
+        </div>
+        <div class="mb-3">
+          <label for="memo" class="form-label">Memo</label>
+          <input type="text" name="memo" id="memo" class="form-control" placeholder="Optional" />
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Transfer Funds</button>
+      </form>
+
+      <!-- Change Password Form -->
       <form action="/customer/change-password" method="POST" class="mt-3">
-        <!-- Change Password Form -->
         <div class="mb-3">
           <label for="currentPassword" class="form-label">Current Password</label>
           <input type="password" name="currentPassword" id="currentPassword" class="form-control" required />
