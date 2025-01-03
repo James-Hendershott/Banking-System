@@ -7,9 +7,9 @@
     <link rel="stylesheet" href="/css/bootstrap.min.css" />
     <link rel="stylesheet" href="/bootstrap-icons.css" />
     <script>
-      // Automatic redirect to login page after 15 seconds
+      // Automatic redirect to login page after 15 seconds with autofilled username
       setTimeout(() => {
-        window.location.href = "/login";
+        window.location.href = "/login?username=<%= uniqueID %>";
       }, 15000);
     </script>
   </head>
@@ -21,10 +21,11 @@
       </p>
       <h3 class="text-center text-primary"><strong><%= uniqueID %></strong></h3>
       <p class="text-center mt-4">
-        Use this username to log in. A confirmation message has been sent to your (fake) email address.
+        Use this username to log in. Please keep it safe and remember it.
+        A confirmation message has been sent to your provided email address.
       </p>
       <div class="text-center mt-4">
-        <a href="/login" class="btn btn-primary">Go to Login</a>
+        <a href="/login?username=<%= uniqueID %>" class="btn btn-primary">Go to Login</a>
       </div>
     </div>
   </body>
