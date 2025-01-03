@@ -10,21 +10,26 @@ router.get('/account', roleCheck.checkCustomer, async (req, res) => {
 
         // Fetch account balances
         const [rawAccounts] = await db.con.promise().query('CALL get_user_account_balances(?)', [userId]);
+        console.log('DEBUG: First Result Set of Accounts:', rawAccounts[0]); // Debugging: Log raw account data
+
         const accounts = rawAccounts[0].map(account => ({
             ...account,
-            balance: parseFloat(account.balance),
-        })).filter(account => account && account.account_type);
+            balance: parseFloat(account.balance), // Convert balance to a number
+        })).filter(account => account && account.account_type); // Filter valid accounts
 
         // Fetch recent transactions
         const transactions = [];
         for (const account of accounts) {
             const [rawTransactions] = await db.con.promise().query('CALL fetch_recent_transactions(?)', [account.account_id]);
+            console.log('DEBUG: First Result Set of Transactions:', rawTransactions[0]); // Debugging: Log raw transaction data
+
             transactions.push({
                 accountType: account.account_type,
-                transactions: rawTransactions[0].filter(txn => txn.timestamp && txn.amount),
+                transactions: rawTransactions[0].filter(txn => txn.timestamp && txn.amount), // Filter valid transactions
             });
         }
 
+        // Render the customer account page with balances and transactions
         res.render('customerAccount', {
             accounts,
             transactions,
@@ -35,8 +40,6 @@ router.get('/account', roleCheck.checkCustomer, async (req, res) => {
         res.status(500).render('error', { message: 'Unable to load account details.', error });
     }
 });
-
-
 
 // **Deposit Funds**
 router.post('/deposit', roleCheck.checkCustomer, async (req, res) => {
