@@ -10,17 +10,32 @@ router.get('/account', roleCheck.checkCustomer, async (req, res) => {
 
         // Fetch account balances
         const [accounts] = await db.con.promise().query('CALL get_user_account_balances(?)', [userId]);
+        console.log('DEBUG: Accounts:', accounts); // Debugging: Log accounts
+
         if (!accounts.length) {
             throw new Error('No accounts found for this user.');
         }
 
-        // Fetch recent transactions for the user
-        const [recentTransactions] = await db.con.promise().query('CALL fetch_recent_transactions(?)', [userId]);
+        // Fetch recent transactions for each account
+        const transactions = [];
+        for (const account of accounts) {
+            const [recentTransactions] = await db.con.promise().query(
+                'CALL fetch_recent_transactions(?)', 
+                [account.account_id]
+            );
+            console.log(`DEBUG: Transactions for account ${account.account_id}:`, recentTransactions); // Debugging: Log transactions
+            transactions.push({
+                accountType: account.account_type,
+                transactions: recentTransactions,
+            });
+        }
+
+        console.log('DEBUG: Transactions Data:', transactions); // Debugging: Log transactions array
 
         // Render the customer account page with balances and transactions
         res.render('customerAccount', {
             accounts,
-            transactions: recentTransactions,
+            transactions,
         });
     } catch (error) {
         console.error('Error fetching customer account details:', error.message);
