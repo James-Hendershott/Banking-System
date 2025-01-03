@@ -64,10 +64,21 @@ router.post('/transfer', roleCheck.checkCustomer, async (req, res) => {
             throw new Error('Error processing transfer.');
         }
 
-        res.redirect('/customer/account');
+        // Success message
+        res.render('customerAccount', {
+            accounts: req.session.accounts, // Replace with actual accounts fetched
+            transactions: req.session.transactions, // Replace with actual transactions fetched
+            message: 'Your transfer was successful!',
+        });
     } catch (error) {
         console.error('Error during transfer:', error.message);
-        res.render('error', { message: 'Unable to process transfer.', error });
+
+        // Error message
+        res.render('customerAccount', {
+            accounts: req.session.accounts || [],
+            transactions: req.session.transactions || [],
+            message: 'Unable to process transfer. Please try again.',
+        });
     }
 });
 
@@ -83,24 +94,33 @@ router.post('/deposit', roleCheck.checkCustomer, async (req, res) => {
 
         // Auto-populate memo if not provided
         const user = req.session.user;
-        const finalMemo = memo && memo.trim() !== '' 
-            ? memo 
+        const finalMemo = memo && memo.trim() !== ''
+            ? memo
             : `${user.username} chose not to provide a memo for this transaction.`;
 
         // Perform the deposit
-        await db.con.promise().query('CALL add_transaction(NULL, ?, ?, ?)', [
-            account_id, amount, finalMemo,
+        await db.con.promise().query('CALL add_transaction(?, ?, ?, ?)', [
+            null, account_id, amount, finalMemo,
         ]);
 
-        // Confirmation message
-        req.flash('success', `Deposit of $${amount} to account ${account_id} was successful!`);
-        res.redirect('/customer/account');
+        // Success message
+        res.render('customerAccount', {
+            accounts: req.session.accounts, // Replace with actual accounts fetched
+            transactions: req.session.transactions, // Replace with actual transactions fetched
+            message: 'Your deposit was successful!',
+        });
     } catch (error) {
         console.error('Error processing deposit:', error.message);
-        req.flash('error', 'Unable to process deposit. Please try again.');
-        res.redirect('/customer/account');
+
+        // Error message
+        res.render('customerAccount', {
+            accounts: req.session.accounts || [], // Ensure accounts are still passed
+            transactions: req.session.transactions || [], // Ensure transactions are still passed
+            message: 'Unable to process deposit. Please try again.',
+        });
     }
 });
+
 
 
 
@@ -125,10 +145,21 @@ router.post('/withdraw', roleCheck.checkCustomer, async (req, res) => {
             null, account_id, -amount, 'Withdrawal',
         ]);
 
-        res.redirect('/customer/account');
+        // Success message
+        res.render('customerAccount', {
+            accounts: req.session.accounts, // Replace with actual accounts fetched
+            transactions: req.session.transactions, // Replace with actual transactions fetched
+            message: 'Your withdrawal was successful!',
+        });
     } catch (error) {
         console.error('Error processing withdrawal:', error.message);
-        res.render('error', { message: 'Unable to process withdrawal.', error });
+
+        // Error message
+        res.render('customerAccount', {
+            accounts: req.session.accounts || [],
+            transactions: req.session.transactions || [],
+            message: 'Unable to process withdrawal. Please try again.',
+        });
     }
 });
 
