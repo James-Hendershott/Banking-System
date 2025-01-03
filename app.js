@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser'); // To parse cookies in HTTP reque
 const logger = require('morgan'); // To log HTTP requests
 const session = require('express-session'); // To manage user sessions
 const MySQLStore = require('express-mysql-session')(session); // To store sessions in the MySQL database
+const flash = require('connect-flash'); // For flash messages
 
 // Import route handlers
 const routes = {
@@ -32,27 +33,32 @@ const sessionPool = require('./lib/sessionPool'); // Custom pool for managing da
 const app = express(); // Initialize the Express application
 
 // **View Engine Setup**
-// Define the directory for EJS views and set EJS as the template engine
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 // **Session Configuration**
-// Define session options including MySQL-based session storage
 const sessionConfig = {
-    key: 'user_session_cookie', // Name of the cookie storing the session ID
-    secret: process.env.SESSION_SECRET || 'yourSecretKey', // Secret key for signing the session ID cookie
-    store: new MySQLStore({}, sessionPool), // Store session data in the MySQL database
-    resave: false, // Do not save session data if it hasn't changed
-    saveUninitialized: false, // Do not create empty sessions
+    key: 'user_session_cookie',
+    secret: process.env.SESSION_SECRET || 'yourSecretKey',
+    store: new MySQLStore({}, sessionPool),
+    resave: false,
+    saveUninitialized: false,
     cookie: {
-        secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
-        maxAge: 1000 * 60 * 60 * 24, // Set cookie expiration to 1 day
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 1000 * 60 * 60 * 24, // 1 day
     },
 };
-app.use(session(sessionConfig)); // Enable session management
+app.use(session(sessionConfig));
+
+// **Add Flash Middleware**
+app.use(flash());
+app.use((req, res, next) => {
+    res.locals.success = req.flash('success');
+    res.locals.error = req.flash('error');
+    next();
+});
 
 // **Initialize Database**
-// Ensure the database, tables, and stored procedures are set up
 db.initializeDatabase();
 
 // **Middleware for Logging and Parsing**
@@ -70,18 +76,17 @@ app.use(express.static(path.join(__dirname, 'node_modules/bootstrap-icons/font')
 // **Session Data in Views**
 // Make session data available in all views (e.g., for dynamic navigation)
 app.use((req, res, next) => {
-    res.locals.session = req.session; // Attach session data to the response
+    res.locals.session = req.session;
     next();
 });
 
 // **Route Handlers**
 // Map routes to their respective modules
 Object.entries(routes).forEach(([route, handler]) => {
-    app.use(`/${route === 'home' ? '' : route}`, handler); // Root route maps to 'home'
+    app.use(`/${route === 'home' ? '' : route}`, handler);
 });
 
 // **Error Handling**
-// Handle 404 errors (Page Not Found)
 app.use((req, res) => {
     res.status(404).render('error', {
         message: 'Page Not Found',
@@ -92,12 +97,11 @@ app.use((req, res) => {
 // Handle general errors (e.g., server errors)
 // Log errors and provide a user-friendly error message
 app.use((err, req, res) => {
-    console.error('Error:', err.message); // Log the error for debugging
+    console.error('Error:', err.message);
     res.status(err.status || 500).render('error', {
-        message: err.message || 'Internal Server Error', // User-friendly message
-        error: req.app.get('env') === 'development' ? err : {}, // Show stack trace only in development
+        message: err.message || 'Internal Server Error',
+        error: req.app.get('env') === 'development' ? err : {},
     });
 });
 
-// Export the app for use by the server
 module.exports = app;
