@@ -14,23 +14,13 @@ router.get('/account', roleCheck.checkCustomer, async (req, res) => {
             throw new Error('No accounts found for this user.');
         }
 
-        // Fetch recent transactions for each account (5 most recent per account)
-        const transactions = [];
-        for (const account of accounts) {
-            const [recentTransactions] = await db.con.promise().query(
-                'CALL fetch_recent_transactions(?, ?)', 
-                [account.account_id, 5]
-            );
-            transactions.push({
-                accountType: account.account_type,
-                transactions: recentTransactions,
-            });
-        }
+        // Fetch recent transactions for the user
+        const [recentTransactions] = await db.con.promise().query('CALL fetch_recent_transactions(?)', [userId]);
 
         // Render the customer account page with balances and transactions
         res.render('customerAccount', {
             accounts,
-            transactions,
+            transactions: recentTransactions,
         });
     } catch (error) {
         console.error('Error fetching customer account details:', error.message);
