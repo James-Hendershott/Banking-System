@@ -100,14 +100,35 @@
       </div>
     </div>
 
-    <!-- Script to Show Modal -->
-    <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        <% if (error) { %>
-          const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
-          errorModal.show();
-        <% } %>
-      });
+      <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const error = params.get('error');
+            const success = params.get('success');
+    
+            const modalElement = document.getElementById('responseModal');
+            const modalLabel = document.getElementById('responseModalLabel');
+            const modalBody = document.getElementById('responseModalBody');
+    
+            if (modalElement && modalLabel && modalBody) {
+                if (error || success) {
+                    if (error) {
+                        modalLabel.textContent = 'Error';
+                        modalBody.textContent = error;
+                        modalBody.className = 'text-danger';
+                    } else if (success) {
+                        modalLabel.textContent = 'Success';
+                        modalBody.textContent = success;
+                        modalBody.className = 'text-success';
+                    }
+    
+                    const messageModal = new bootstrap.Modal(modalElement);
+                    messageModal.show();
+                }
+            }
+        });
+    </script>
+ 
     </script>
   </body>
 </html>
