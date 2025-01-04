@@ -51,23 +51,14 @@ router.post('/transfer', roleCheck.checkCustomer, async (req, res) => {
             throw new Error('Error processing transfer.');
         }
 
-        // Fetch updated account balances
-        const user = req.session.user;
-        const [updatedAccounts] = await db.con.promise().query('CALL get_user_account_balances(?)', [user.user_id]);
-        const accounts = updatedAccounts[0].map(account => ({
-            ...account,
-            balance: parseFloat(account.balance),
-        })).filter(account => account && account.account_type);
-
-        res.render('customerAccount', {
-            accounts,
-            message: 'Your transfer was successful!',
-        });
+        // Redirect with success message
+        res.redirect('/customer/account?success=Your transfer was successful!');
     } catch (error) {
         console.error('Error during transfer:', error.message);
         res.redirect('/customer/account?error=Unable to perform Transfer, please check the information and try again.');
     }
 });
+
 
 // **Deposit Funds**
 router.post('/deposit', roleCheck.checkCustomer, async (req, res) => {
@@ -95,22 +86,20 @@ router.post('/deposit', roleCheck.checkCustomer, async (req, res) => {
             balance: parseFloat(account.balance),
         })).filter(account => account && account.account_type);
 
-        res.render('customerAccount', {
-            accounts,
-            message: 'Your deposit was successful!',
-        });
+        res.redirect('/customer/account?success=Your deposit was successful!');
     } catch (error) {
         console.error('Error processing deposit:', error.message);
-        res.redirect('/customer/account?error=Unable to perform Deposit, please check the information and try again.');
+        res.redirect('/customer/account?error=Unable to perform Deposit. Please check the information and try again.');
     }
 });
 
 // **Withdraw Funds**
 router.post('/withdraw', roleCheck.checkCustomer, async (req, res) => {
     const { account_id, amount, memo } = req.body;
+
     try {
-        if (!currentPassword || !newPassword) {
-            throw new Error('Both current and new passwords are required.');
+        if (!account_id || isNaN(Number(amount)) || Number(amount) <= 0) {
+            throw new Error('Invalid withdrawal input. Please select an account and enter a positive amount.');
         }
 
         // Fetch the account balance
@@ -119,7 +108,7 @@ router.post('/withdraw', roleCheck.checkCustomer, async (req, res) => {
             throw new Error('Account not found.');
         }
 
-         const currentBalance = parseFloat(rows[0].balance);
+        const currentBalance = parseFloat(rows[0].balance);
         if (currentBalance < amount) {
             throw new Error('Insufficient funds for withdrawal.');
         }
@@ -140,10 +129,8 @@ router.post('/withdraw', roleCheck.checkCustomer, async (req, res) => {
             ...account,
             balance: parseFloat(account.balance),
         })).filter(account => account && account.account_type);
-        res.render('customerAccount', {
-            accounts,
-            message: 'Your withdrawal was successful!',
-        });
+
+        res.redirect('/customer/account?success=Your withdrawal was successful!');
     } catch (error) {
         console.error('Error processing withdrawal:', error.message);
         res.redirect('/customer/account?error=Insufficient funds or invalid withdrawal request.');
