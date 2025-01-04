@@ -1,2 +1,3 @@
 [2025-01-01T08:19:34.555Z] Access denied for User ID 5 to '/transfer': Role mismatch (current role: 'customer', required role: 'customer,employee')
 [2025-01-01T08:32:39.912Z] Access denied for User ID 5 to '/transfer': Role mismatch (current role: 'customer', required role: 'customer,employee')
+[2025-01-04T00:37:31.916Z] Access denied for User ID 8 to '/transactions/13': Role mismatch (current role: 'customer', required role: 'customer,employee')

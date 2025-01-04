@@ -19,7 +19,7 @@ function logError(message) {
 }
 
 // Middleware to validate the user's role for a specific route
-function validateRole(requiredRole, req, res, next) {
+function validateRole(requiredRoles, req, res, next) {
     const user = req.session?.user;
     const requestedUrl = req.originalUrl;
 
@@ -28,12 +28,17 @@ function validateRole(requiredRole, req, res, next) {
         return res.redirect('/login'); // Redirect to login if no session exists
     }
 
-    if (user.role !== requiredRole) {
+    // Check if the user's role is in the required roles array
+    if (!Array.isArray(requiredRoles)) {
+        requiredRoles = [requiredRoles]; // Ensure single role is converted to an array
+    }
+
+    if (!requiredRoles.includes(user.role)) {
         logError(
-            `Access denied for User ID ${user.user_id} to '${requestedUrl}': Role mismatch (current role: '${user.role}', required role: '${requiredRole}')`
+            `Access denied for User ID ${user.user_id} to '${requestedUrl}': Role mismatch (current role: '${user.role}', required roles: '${requiredRoles.join(', ')}')`
         );
         return res.status(403).render('error', {
-            message: `Access denied: ${requiredRole} role required.`,
+            message: `Access denied: ${requiredRoles.join(', ')} role required.`,
             error: { status: 403 },
         });
     }
@@ -43,10 +48,10 @@ function validateRole(requiredRole, req, res, next) {
 
 // Predefined middleware for specific roles
 const roleCheck = {
-    checkRole: (requiredRole) => (req, res, next) => validateRole(requiredRole, req, res, next),
-    checkCustomer: (req, res, next) => validateRole('customer', req, res, next),
-    checkEmployee: (req, res, next) => validateRole('employee', req, res, next),
-    checkAdmin: (req, res, next) => validateRole('admin', req, res, next),
+    checkRole: (requiredRoles) => (req, res, next) => validateRole(requiredRoles, req, res, next),
+    checkCustomer: (req, res, next) => validateRole(['customer'], req, res, next),
+    checkEmployee: (req, res, next) => validateRole(['employee'], req, res, next),
+    checkAdmin: (req, res, next) => validateRole(['admin'], req, res, next),
 };
 
 module.exports = roleCheck;

@@ -50,6 +50,11 @@ const sessionConfig = {
 };
 app.use(session(sessionConfig));
 
+app.use((req, res, next) => {
+    console.log(`DEBUG: Incoming request - Method: ${req.method}, URL: ${req.originalUrl}`);
+    next();
+});
+
 // **Add Flash Middleware**
 app.use(flash());
 app.use((req, res, next) => {
@@ -57,6 +62,7 @@ app.use((req, res, next) => {
     res.locals.error = req.flash('error');
     next();
 });
+app.use('/transactions', require('./routes/transaction'));
 
 // **Initialize Database**
 db.initializeDatabase();

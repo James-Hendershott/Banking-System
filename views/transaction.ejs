@@ -20,36 +20,40 @@
       <div class="alert alert-danger text-center" role="alert">
         <%= error %>
       </div>
+      <% } else if (!transactions || transactions.length === 0) { %>
+      <div class="alert alert-warning text-center" role="alert">
+        No transactions available for this account.
+      </div>
       <% } else { %>
 
       <!-- Transaction Table -->
       <table class="table table-striped mt-4">
         <thead>
-            <tr>
-                <th>Date</th>
-                <th>From Account</th>
-                <th>To Account</th>
-                <th>Amount</th>
-                <th>Memo</th>
-            </tr>
+          <tr>
+            <th>Date</th>
+            <th>From Account</th>
+            <th>To Account</th>
+            <th>Amount</th>
+            <th>Memo</th>
+          </tr>
         </thead>
         <tbody>
-            <% transactions.forEach(transaction => { %>
-            <tr>
-                <td><%= transaction.timestamp %></td>
-                <td><%= transaction.from_account || 'N/A' %></td>
-                <td><%= transaction.to_account || 'N/A' %></td>
-                <td>$<%= transaction.amount.toFixed(2) %></td>
-                <td><%= transaction.memo || 'N/A' %></td>
-            </tr>
-            <% }) %>
+          <% transactions.forEach(transaction => { %>
+          <tr>
+            <td><%= transaction?.timestamp || 'N/A' %></td>
+            <td><%= transaction?.from_account || 'N/A' %></td>
+            <td><%= transaction?.to_account || 'N/A' %></td>
+            <td>$<%= transaction.amount ? transaction.amount.toFixed(2) : '0.00' %></td>
+            <td><%= transaction?.memo || 'N/A' %></td>
+          </tr>
+          <% }) %>
         </tbody>
-    </table> 
+      </table>
       <% } %>
 
       <!-- Back Button -->
       <div class="text-center mt-4">
-        <a href="<%= backLink %>" class="btn btn-secondary">
+        <a href="<%= backLink || '/' %>" class="btn btn-secondary">
           <i class="bi bi-arrow-left"></i> Back
         </a>
       </div>
