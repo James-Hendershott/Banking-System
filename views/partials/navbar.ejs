@@ -10,7 +10,10 @@
                         </li>
                     <% } else if (session.user.role === 'employee') { %>
                         <li class="nav-item">
-                            <a class="nav-link" href="/employee/account">Employee Home</a>
+                            <a class="nav-link" href="/employee/account">Employee Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/employee/manage-customers">Manage Customers</a>
                         </li>
                     <% } else if (session.user.role === 'customer') { %>
                         <li class="nav-item">
@@ -18,7 +21,7 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="/customer/transactions">Transaction History</a>
-                          </li>                        
+                        </li>
                     <% } %>
                     <li class="nav-item">
                         <a class="nav-link" href="/logout">Logout</a>
