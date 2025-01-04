@@ -82,53 +82,41 @@
       </div>
     </div>
 
-    <!-- Modal for Error -->
-    <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="errorModalLabel">Error</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <%= error || 'An unknown error occurred.' %>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          </div>
+    <!-- Modal for Messages -->
+    <div class="modal fade" id="responseModal" tabindex="-1" aria-labelledby="responseModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="responseModalLabel">Notification</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="responseModalBody"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
 
-      <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const params = new URLSearchParams(window.location.search);
-            const error = params.get('error');
-            const success = params.get('success');
-    
-            const modalElement = document.getElementById('responseModal');
-            const modalLabel = document.getElementById('responseModalLabel');
-            const modalBody = document.getElementById('responseModalBody');
-    
-            if (modalElement && modalLabel && modalBody) {
-                if (error || success) {
-                    if (error) {
-                        modalLabel.textContent = 'Error';
-                        modalBody.textContent = error;
-                        modalBody.className = 'text-danger';
-                    } else if (success) {
-                        modalLabel.textContent = 'Success';
-                        modalBody.textContent = success;
-                        modalBody.className = 'text-success';
-                    }
-    
-                    const messageModal = new bootstrap.Modal(modalElement);
-                    messageModal.show();
-                }
-            }
-        });
-    </script>
- 
+    <!-- Script to Handle Modal Messages -->
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+          const params = new URLSearchParams(window.location.search);
+          const error = '<%= typeof error !== "undefined" ? error : "" %>'; // Pass server-side error to client-side script
+          
+          if (error) {
+              const modalElement = document.getElementById('responseModal');
+              const modalLabel = document.getElementById('responseModalLabel');
+              const modalBody = document.getElementById('responseModalBody');
+              
+              modalLabel.textContent = 'Error';
+              modalBody.textContent = error;
+              modalBody.className = 'text-danger';
+              
+              const messageModal = new bootstrap.Modal(modalElement);
+              messageModal.show();
+          }
+      });
     </script>
   </body>
 </html>
