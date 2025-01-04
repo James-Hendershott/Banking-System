@@ -13,17 +13,17 @@
     <%- include('partials/navbar') %>
 
     <!-- Login Form -->
-    <div
-      class="container-fluid vh-100 d-flex justify-content-center align-items-center"
-    >
+    <div class="container-fluid vh-100 d-flex justify-content-center align-items-center">
       <div class="col-md-6 col-lg-4 shadow p-4 bg-white rounded">
         <h2 class="text-center text-primary mb-4">Login</h2>
-          <!-- Flash Message -->
-          <% if (messages.error && messages.error.length > 0) { %>
-            <div class="alert alert-danger" role="alert">
-                <%= messages.error[0] %>
-            </div>
-          <% } %>
+
+        <!-- Flash Message -->
+        <% if (messages.error && messages.error.length > 0) { %>
+          <div class="alert alert-danger" role="alert">
+            <%= messages.error[0] %>
+          </div>
+        <% } %>
+
         <form action="/login" method="POST">
           <div class="mb-3">
             <label for="username" class="form-label">
@@ -69,7 +69,7 @@
               }
             }
           </script>
-          
+
           <button type="submit" class="btn btn-primary w-100">
             <i class="bi bi-box-arrow-in-right"></i> Log In
           </button>
@@ -86,42 +86,5 @@
         </div>
       </div>
     </div>
-
-    <!-- Modal for Messages -->
-    <div class="modal fade" id="responseModal" tabindex="-1" aria-labelledby="responseModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="responseModalLabel">Notification</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="responseModalBody"></div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Script to Handle Modal Messages -->
-    <script>
-      document.addEventListener('DOMContentLoaded', () => {
-          const params = new URLSearchParams(window.location.search);
-          const error = params.get('error'); // Correctly fetch error parameter
-          
-          if (error) {
-              const modalElement = document.getElementById('responseModal');
-              const modalLabel = document.getElementById('responseModalLabel');
-              const modalBody = document.getElementById('responseModalBody');
-              
-              modalLabel.textContent = 'Error';
-              modalBody.textContent = decodeURIComponent(error); // Decode URL-encoded error message
-              modalBody.className = 'text-danger';
-              
-              const messageModal = new bootstrap.Modal(modalElement);
-              messageModal.show();
-          }
-      });
-    </script>
   </body>
 </html>
