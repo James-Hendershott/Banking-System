@@ -192,4 +192,37 @@ router.post('/change-password', roleCheck.checkCustomer, async (req, res) => {
     }
 });
 
+// **Full Transaction History**
+router.get('/transactions', roleCheck.checkCustomer, async (req, res) => {
+    try {
+        const userId = req.session.user.user_id;
+
+        // Fetch all transactions for the user's accounts
+        const [transactions] = await db.con.promise().query(`
+            SELECT 
+                t.transaction_id, 
+                t.from_account, 
+                t.to_account, 
+                t.amount, 
+                t.memo, 
+                t.timestamp
+            FROM transactions t
+            JOIN bank_accounts ba ON (t.from_account = ba.account_id OR t.to_account = ba.account_id)
+            WHERE ba.user_id = ?
+            ORDER BY t.timestamp DESC
+        `, [userId]);
+
+        res.render('allTransactions', {
+            transactions,
+            backLink: '/customer/account',
+        });
+    } catch (error) {
+        console.error('Error fetching transaction history:', error.message);
+        res.status(500).render('error', {
+            message: 'Unable to load transaction history.',
+            errorCode: 500,
+        });
+    }
+});
+
 module.exports = router;
