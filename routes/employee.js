@@ -159,14 +159,16 @@ router.get('/manage-customers', roleCheck.checkEmployee, (req, res) => {
     res.render('searchCustomer', { message: '' });
 });
 
-router.post('/search-customer', roleCheck.checkEmployee, async (req, res) => {
-    const { searchType, searchValue } = req.body;
+// Correct route for search-customer
+router.get('/search', roleCheck.checkEmployee, async (req, res) => {
+    const { search_type, search_value } = req.query;
+
     try {
         let customer;
-        if (searchType === 'username') {
-            customer = await dataUtils.fetchUserByUsername(searchValue);
+        if (search_type === 'username') {
+            customer = await dataUtils.fetchUserByUsername(search_value);
         } else {
-            customer = await dataUtils.fetchUserById(searchValue);
+            customer = await dataUtils.fetchUserById(search_value);
         }
 
         if (!customer || customer.role !== 'customer') {

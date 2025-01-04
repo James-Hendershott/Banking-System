@@ -20,7 +20,7 @@ router.post('/', (req, res) => {
     db.con.query(`CALL get_salt(?)`, [username], (err, saltResults) => {
         if (err || saltResults[0].length === 0) {
             console.error('Error fetching salt or invalid username:', err || 'No salt found.');
-            return res.render('login', { error: 'Invalid username or password.' });
+            return res.redirect('/login?error=Invalid username or password.');
         }
 
         const salt = saltResults[0][0].salt; // Extract the salt
@@ -36,7 +36,7 @@ router.post('/', (req, res) => {
         db.con.query(`CALL validate_login(?)`, [username], (err, results) => {
             if (err || results[0].length === 0) {
                 console.error('Error during login validation or invalid username:', err || 'No user found.');
-                return res.render('login', { error: 'Invalid username or password.' });
+                return res.redirect('/login?error=Invalid username or password.');
             }
 
             const user = results[0][0]; // Extract user data
@@ -46,7 +46,7 @@ router.post('/', (req, res) => {
             // Compare hashed passwords
             if (hashedPassword !== storedPassword) {
                 console.error('DEBUG: Password mismatch: Input hashed password does not match stored password.');
-                return res.render('login', { error: 'Invalid username or password.' });
+                return res.redirect('/login?error=Invalid username or password.');
             }
 
             console.log(`DEBUG: Login successful for username "${username}"`); // Debugging: Log successful login

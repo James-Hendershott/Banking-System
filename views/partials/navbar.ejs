@@ -13,6 +13,9 @@
                             <a class="nav-link" href="/employee/account">Employee Dashboard</a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="/transaction/employee/<%= session.user.user_id %>">Transaction History</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="/employee/manage-customers">Manage Customers</a>
                         </li>
                     <% } else if (session.user.role === 'customer') { %>
