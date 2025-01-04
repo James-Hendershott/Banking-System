@@ -24,10 +24,10 @@
           <% accounts.forEach(account => { %>
             <% if (account && account.account_type) { %>
               <h5>
-                <%= account.account_type %> Account Balance: $<%= (account.balance || 0).toFixed(2) %>
-                <!-- Add a link to view transactions for this specific account -->
-                <a href="/transactions/<%= account.account_id %>" class="btn btn-link">View Transactions</a>
-              </h5>
+                <a href="/transactions/<%= account.account_id %>" class="text-decoration-none">
+                    <%= account.account_type %> Account Balance: $<%= (account.balance || 0).toFixed(2) %>
+                </a>
+            </h5>        
             <% } else { %>
               <p class="text-danger">Account information is missing or invalid.</p>
             <% } %>

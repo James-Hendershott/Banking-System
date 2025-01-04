@@ -7,20 +7,24 @@ const roleCheck = require('../middleware/roleCheck'); // Import roleCheck middle
 router.get('/:accountId', roleCheck.checkRole(['customer', 'employee']), async (req, res) => {
     try {
         const { accountId } = req.params;
-        const transactions = await fetchTransactionsByAccount(accountId); // Fetch transactions
-        res.render('transaction', { 
-            transactions, 
+        const transactions = await fetchTransactions(accountId); // Fetch transactions for the account
+        console.log('DEBUG: Fetching transactions for accountId:', accountId);
+
+        res.render('transaction', {
+            transactions,
             backLink: `/${req.session.user.role}/account`,
         });
     } catch (error) {
         console.error('Error fetching transactions:', error.message);
-        res.render('transaction', { 
-            transactions: [], 
-            error: 'Error fetching transactions. Please try again.',
-            backLink: `/${req.session.user.role}/account`,
+        console.log('DEBUG: Fetching transactions for accountId:', accountId);
+
+        res.status(404).render('error', {
+            message: 'Page Not Found',
+            errorCode: 404,
         });
     }
 });
+
 
 // Handle form submissions or additional actions (if needed)
 router.post('/', roleCheck.checkRole(['customer', 'employee']), (req, res) => {

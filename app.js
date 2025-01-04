@@ -74,7 +74,6 @@ app.use(express.static(path.join(__dirname, 'node_modules/bootstrap/dist/')));
 app.use(express.static(path.join(__dirname, 'node_modules/bootstrap-icons/font')));
 
 // **Session Data in Views**
-// Make session data available in all views (e.g., for dynamic navigation)
 app.use((req, res, next) => {
     res.locals.session = req.session;
     next();
@@ -83,10 +82,12 @@ app.use((req, res, next) => {
 // **Route Handlers**
 // Map routes to their respective modules
 Object.entries(routes).forEach(([route, handler]) => {
-    app.use(`/${route === 'home' ? '' : route}`, handler);
+    const prefix = route === 'home' ? '/' : `/${route}`;
+    app.use(prefix, handler);
 });
 
 // **Error Handling**
+// 404 - Page Not Found
 app.use((req, res) => {
     res.status(404).render('error', {
         message: 'Page Not Found',
@@ -94,8 +95,7 @@ app.use((req, res) => {
     });
 });
 
-// Handle general errors (e.g., server errors)
-// Log errors and provide a user-friendly error message
+// General Errors
 app.use((err, req, res) => {
     console.error('Error:', err.message);
     res.status(err.status || 500).render('error', {
