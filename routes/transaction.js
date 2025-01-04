@@ -4,18 +4,19 @@ const db = require('../lib/database'); // Import database module
 const roleCheck = require('../middleware/roleCheck'); // Import roleCheck middleware
 
 // Render transaction history page
-router.get('/:type/:accountId', roleCheck.checkRole(['customer', 'employee']), async (req, res) => {
+router.get('/:accountId', roleCheck.checkRole(['customer', 'employee']), async (req, res) => {
     try {
-        const { accountId, type } = req.params;
-        const transactions = await fetchTransactions(accountId); // Fetch transactions for the account
+        const { accountId } = req.params;
+        const transactions = await fetchTransactionsByAccount(accountId); // Fetch transactions
         res.render('transaction', { 
             transactions, 
-            backLink: type === 'customer' ? '/employee/manage-customer' : '/employee/account',
-        }); // Pass transaction data to the view
+            backLink: `/${req.session.user.role}/account`,
+        });
     } catch (error) {
+        console.error('Error fetching transactions:', error.message);
         res.render('transaction', { 
             transactions: [], 
-            error: 'Error fetching transactions.',
+            error: 'Error fetching transactions. Please try again.',
             backLink: `/${req.session.user.role}/account`,
         });
     }
