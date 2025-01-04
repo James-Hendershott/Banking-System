@@ -1,14 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../lib/database'); // Import database module
 const roleCheck = require('../middleware/roleCheck'); // Import roleCheck middleware
+const fetchTransactionsByAccount = require('../lib/dataUtils').fetchTransactionsByAccount; // Correct function import
 
 // Render transaction history page
 router.get('/:accountId', roleCheck.checkRole(['customer', 'employee']), async (req, res) => {
     try {
         const { accountId } = req.params;
-        const transactions = await fetchTransactions(accountId); // Fetch transactions for the account
-        console.log('DEBUG: Fetching transactions for accountId:', accountId);
+        console.log('DEBUG: Received request for accountId:', accountId);
+
+        const transactions = await fetchTransactionsByAccount(accountId); // Call stored procedure
+        console.log('DEBUG: Transactions fetched for accountId:', transactions);
 
         res.render('transaction', {
             transactions,
@@ -23,15 +25,6 @@ router.get('/:accountId', roleCheck.checkRole(['customer', 'employee']), async (
             errorCode: 404,
         });
     }
-});
-
-
-// Handle form submissions or additional actions (if needed)
-router.post('/', roleCheck.checkRole(['customer', 'employee']), (req, res) => {
-    console.log("transaction.js: POST - Handling transaction actions");
-
-    // Example: Redirect back to the transaction page after handling
-    res.redirect('/transaction');
 });
 
 module.exports = router;
