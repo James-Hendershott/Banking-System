@@ -102,7 +102,7 @@
     <script>
       document.addEventListener('DOMContentLoaded', () => {
           const params = new URLSearchParams(window.location.search);
-          const error = '<%= typeof error !== "undefined" ? error : "" %>'; // Pass server-side error to client-side script
+          const error = params.get('error'); // Correctly fetch error parameter
           
           if (error) {
               const modalElement = document.getElementById('responseModal');
@@ -110,7 +110,7 @@
               const modalBody = document.getElementById('responseModalBody');
               
               modalLabel.textContent = 'Error';
-              modalBody.textContent = error;
+              modalBody.textContent = decodeURIComponent(error); // Decode URL-encoded error message
               modalBody.className = 'text-danger';
               
               const messageModal = new bootstrap.Modal(modalElement);
