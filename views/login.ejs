@@ -18,7 +18,12 @@
     >
       <div class="col-md-6 col-lg-4 shadow p-4 bg-white rounded">
         <h2 class="text-center text-primary mb-4">Login</h2>
-        
+          <!-- Flash Message -->
+          <% if (messages.error && messages.error.length > 0) { %>
+            <div class="alert alert-danger" role="alert">
+                <%= messages.error[0] %>
+            </div>
+          <% } %>
         <form action="/login" method="POST">
           <div class="mb-3">
             <label for="username" class="form-label">
