@@ -15,18 +15,8 @@
     <div class="container mt-5">
       <h2 class="text-center">Transaction History</h2>
 
-      <!-- Error Message -->
-      <% if (typeof error !== 'undefined') { %>
-      <div class="alert alert-danger text-center" role="alert">
-        <%= error %>
-      </div>
-      <% } else if (!transactions || transactions.length === 0) { %>
-      <div class="alert alert-warning text-center" role="alert">
-        No transactions available for this account.
-      </div>
-      <% } else { %>
-
-      <!-- Transaction Table -->
+      <!-- Render Transactions -->
+      <% if (transactions && transactions.length > 0) { %>
       <table class="table table-striped mt-4">
         <thead>
           <tr>
@@ -40,20 +30,24 @@
         <tbody>
           <% transactions.forEach(transaction => { %>
           <tr>
-            <td><%= transaction?.timestamp || 'N/A' %></td>
-            <td><%= transaction?.from_account || 'N/A' %></td>
-            <td><%= transaction?.to_account || 'N/A' %></td>
-            <td>$<%= transaction.amount ? transaction.amount.toFixed(2) : '0.00' %></td>
-            <td><%= transaction?.memo || 'N/A' %></td>
+            <td><%= new Date(transaction.timestamp).toLocaleString() %></td>
+            <td><%= transaction.from_account || 'N/A' %></td>
+            <td><%= transaction.to_account || 'N/A' %></td>
+            <td>$<%= transaction.amount %></td>
+            <td><%= transaction.memo || 'N/A' %></td>
           </tr>
           <% }) %>
         </tbody>
       </table>
+      <% } else { %>
+      <div class="alert alert-warning text-center">
+        No transactions found for this account.
+      </div>
       <% } %>
 
       <!-- Back Button -->
       <div class="text-center mt-4">
-        <a href="<%= backLink || '/' %>" class="btn btn-secondary">
+        <a href="<%= backLink %>" class="btn btn-secondary">
           <i class="bi bi-arrow-left"></i> Back
         </a>
       </div>

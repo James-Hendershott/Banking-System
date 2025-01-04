@@ -50,8 +50,9 @@ const sessionConfig = {
 };
 app.use(session(sessionConfig));
 
+// Make session data available in all views
 app.use((req, res, next) => {
-    console.log(`DEBUG: Incoming request - Method: ${req.method}, URL: ${req.originalUrl}`);
+    res.locals.session = req.session;
     next();
 });
 
