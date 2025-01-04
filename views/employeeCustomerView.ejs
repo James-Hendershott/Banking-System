@@ -26,13 +26,13 @@
         <div class="card mt-3">
             <div class="card-body">
                 <% if (Array.isArray(accounts) && accounts.length > 0) { %>
-                    <% accounts.forEach(account => { %>
-                        <h5>
-                            <a href="/transactions/<%= account.account_id %>" class="text-decoration-none">
-                                <%= account.account_type %> Account Balance: $<%= (account.balance || 0).toFixed(2) %>
-                            </a>
-                        </h5>
-                    <% }); %>
+                  <% accounts.forEach(account => { %>
+                    <h5>
+                        <a href="/transactions/<%= account.account_id %>" class="text-decoration-none">
+                            <%= account.account_type %> Account Balance: $<%= isNaN(account.balance) ? '0.00' : account.balance.toFixed(2) %>
+                        </a>
+                    </h5>
+                <% }); %>
                 <% } else { %>
                     <p class="text-danger">No accounts found for this customer.</p>
                 <% } %>

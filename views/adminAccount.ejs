@@ -62,6 +62,13 @@
                         <i class="bi bi-person-plus"></i> Promote to Employee
                     </button>
                 </form>
+                <!-- Demote to Customer -->
+                <form action="/admin/demote-user" method="POST" class="mt-3">
+                    <input type="hidden" name="username" value="<%= userAccount.username %>">
+                    <button type="submit" class="btn btn-danger w-100">
+                        <i class="bi bi-person-dash"></i> Demote to Customer
+                    </button>
+                </form>
             </div>
         <% } %>
     </div>

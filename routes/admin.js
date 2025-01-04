@@ -80,4 +80,24 @@ router.post('/promote-user', roleCheck.checkAdmin, async (req, res) => {
     }
 });
 
+// Handle Demotion to Customer
+router.post('/demote-user', roleCheck.checkAdmin, async (req, res) => {
+    try {
+        const { username } = req.body;
+
+        if (!username) throw new Error('Username is required.');
+
+        const user = await fetchUserByUsername(username);
+        if (!user) throw new Error('User not found.');
+
+        // Update user role to "customer"
+        await db.con.promise().query('UPDATE users SET role = "customer" WHERE username = ?', [username]);
+
+        res.render('adminAccount', { userAccount: null, message: 'User demoted to customer successfully.' });
+    } catch (error) {
+        res.render('adminAccount', { userAccount: null, message: error.message });
+    }
+});
+
+
 module.exports = router;

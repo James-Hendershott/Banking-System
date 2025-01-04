@@ -159,10 +159,9 @@ router.get('/manage-customers', roleCheck.checkEmployee, (req, res) => {
     res.render('searchCustomer', { message: '' });
 });
 
-// Correct route for search-customer
-router.get('/search', roleCheck.checkEmployee, async (req, res) => {
-    const { search_type, search_value } = req.query;
-
+// Update the "/search-customer" route
+router.post('/search-customer', roleCheck.checkEmployee, async (req, res) => {
+    const { search_type, search_value } = req.body;
     try {
         let customer;
         if (search_type === 'username') {
@@ -172,15 +171,23 @@ router.get('/search', roleCheck.checkEmployee, async (req, res) => {
         }
 
         if (!customer || customer.role !== 'customer') {
-            throw new Error('Customer not found.');
+            throw new Error('Customer not found or is not a customer.');
         }
 
         const accounts = await dataUtils.fetchUserAccounts(customer.user_id);
-        res.render('employeeCustomerView', { customer, accounts });
+
+        // Ensure valid numeric balances
+        const formattedAccounts = accounts.map(account => ({
+            ...account,
+            balance: parseFloat(account.balance) || 0, // Convert to number, default to 0
+        }));
+
+        res.render('employeeCustomerView', { customer, accounts: formattedAccounts });
     } catch (error) {
-        console.error('Error searching for customer:', error.message);
-        res.render('searchCustomer', { message: 'Customer not found. Please try again.' });
+        console.error('Error fetching customer details:', error.message);
+        res.render('searchCustomer', { message: 'Error fetching customer details. Please try again.' });
     }
 });
+
 
 module.exports = router;
